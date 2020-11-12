@@ -1,0 +1,9 @@
+#activates moderation functionality
+moderate-directory: true
+
+#allows multi-player ownership of shops, side effect: allows players to make shops for others, but makes them co-owners too
+multi-owner: true
+
+#allows adding offline players as owners (not recommended)
+#only works when multi-player is true
+allow-add-offline-players: false
