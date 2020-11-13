@@ -8,7 +8,7 @@ simple easy to use solution to find what you want without the need to traverse a
 ### How to use
 #### Viewing the Marketplace
 The shop data is stored in json format in the plugin's directory, making it exportable to other servers (and conversely importable). To make yourself a copy of the Marketplace Directory, sign a book 
-with the title `[Marketplace]`. This signed book will now server as a gateway to the marketplace. Interact with the book as you would do with a regular signed book, and you will be able to see all
+with the title `[Marketplace]`. This signed book will now serve as a gateway to the marketplace. Interact with the book as you would do with a regular signed book, and you will be able to see all
 shops registered in the directory. You can view the items sold in each shop by clicking on the respective shop names in the inventory 
 style GUI now open on your screen.
 
@@ -18,7 +18,7 @@ The items will have their order quantity and value displayed with them. Right cl
 
 #### Making your own shop
 ##### Getting your shop listed
-Write the name and description of your shop in the format
+Write the name and description of your shop in a book in the format
 ````
 [<shop-name>]
 [<description>]
