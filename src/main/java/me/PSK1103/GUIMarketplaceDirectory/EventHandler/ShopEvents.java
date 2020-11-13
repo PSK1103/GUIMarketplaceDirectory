@@ -68,6 +68,9 @@ public class ShopEvents implements Listener {
 
             editBookEvent.getPlayer().sendMessage(ChatColor.GOLD + "Shop initialised successfully!");
         }
+        else if(meta.getTitle().equalsIgnoreCase("[Marketplace]")) {
+            meta.setDisplayName(ChatColor.GOLD + "Marketplace Directory");
+        }
     }
 
     @EventHandler
