@@ -26,7 +26,7 @@ Write the name and description of your shop in a book in the format
 Make sure to not use any more "\[" and "\]" than required. <br>
 Sign it with the title `[shop init]` or `[init shop]`. 
 
-<img src="Captures/init_shop.gif">
+<img src="Captures/init_shop.gif"> <br> <br>
 <img src="Captures/view_marketplace.gif">
 
 ##### Adding Items
