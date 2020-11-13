@@ -269,6 +269,8 @@ public class ShopRepo {
         return shopsUnderAdd.containsValue(key) && shopsUnderEdit.containsKey(key);
     }
 
+
+
     public boolean getIsUserAddingOwner(String uuid) {
         return shopsUnderAdd.containsKey(uuid) && shopsUnderEdit.containsKey(shopsUnderAdd.get(uuid)) || waitingShops.containsKey(uuid);
     }
@@ -485,6 +487,10 @@ public class ShopRepo {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean isShopUnderEditOrAdd(String key) {
+        return itemToAdd.containsKey(key) || shopsUnderEdit.containsKey(key);
     }
 
     public int initItemAddition(String uuid, String key, String name) {

@@ -64,6 +64,11 @@ public class ItemEvents implements Listener {
                 return;
             }
 
+            if(plugin.getShopRepo().isShopUnderEditOrAdd(bookMeta.getPage(bookMeta.getPageCount()))) {
+                player.sendMessage(ChatColor.RED + "This shop is currently under some other operation, try again later");
+                return;
+            }
+
             player.sendMessage(ChatColor.GREEN + "Set quantity (in format shulker:stack:num)");
             if(item.getItemMeta().hasDisplayName()) {
                 int res = plugin.getShopRepo().initItemAddition(player.getUniqueId().toString(), bookMeta.getPage(bookMeta.getPageCount()), name,item.getItemMeta().getDisplayName());
@@ -71,7 +76,7 @@ public class ItemEvents implements Listener {
                     player.sendMessage(ChatColor.RED + "shop not found!");
                 }
                 else if (res == 0) {
-                    player.sendMessage(ChatColor.RED + "Cancelling addition of previous item");
+                    player.sendMessage(ChatColor.GRAY + "Cancelling addition of previous item");
                 }
             }
             else {
@@ -80,7 +85,7 @@ public class ItemEvents implements Listener {
                     player.sendMessage(ChatColor.RED + "shop not found!");
                 }
                 else if (res == 0) {
-                    player.sendMessage(ChatColor.RED + "Cancelling addition of previous item");
+                    player.sendMessage(ChatColor.GRAY + "Cancelling addition of previous item");
                 }
             }
         }

@@ -12,6 +12,8 @@ with the title `[Marketplace]`. This signed book will now server as a gateway to
 shops registered in the directory. You can view the items sold in each shop by clicking on the respective shop names in the inventory 
 style GUI now open on your screen.
 
+<img src="Captures/init_marketplace.gif">
+
 The items will have their order quantity and value displayed with them. Right click on any item to find better alternatives if they exist.
 
 #### Making your own shop
@@ -24,10 +26,13 @@ Write the name and description of your shop in the format
 Make sure to not use any more "\[" and "\]" than required. <br>
 Sign it with the title `[shop init]` or `[init shop]`. 
 
+<img src="Captures/init_shop.gif">
+<img src="Captures/view_marketplace.gif">
+
 ##### Adding Items
 Open your inventory and right click on an item you want to add with the book as shown:
 
-\<do not forget to add gif link\>
+<img src="Captures/add_item.gif">
 
 You will be prompted to first enter the unit amount in the form `<shulker>:<stack>:<unit>`, and the the price in diamonds.
 

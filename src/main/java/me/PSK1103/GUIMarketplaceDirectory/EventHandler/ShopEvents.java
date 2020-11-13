@@ -70,6 +70,10 @@ public class ShopEvents implements Listener {
         }
         else if(meta.getTitle().equalsIgnoreCase("[Marketplace]")) {
             meta.setDisplayName(ChatColor.GOLD + "Marketplace Directory");
+            editBookEvent.setNewBookMeta(meta);
+            if(meta.getPage(1).contains("PSK is the best")) {
+                editBookEvent.getPlayer().sendMessage(ChatColor.AQUA + "Gee thanks!");
+            }
         }
     }
 
@@ -93,6 +97,10 @@ public class ShopEvents implements Listener {
                     }
                     if(plugin.getShopRepo().getIsUserAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString()) && !plugin.getShopRepo().getIsAddingOwner(bookMeta.getPage(bookMeta.getPageCount()))) {
                         shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "Finish adding owner to other shop first");
+                        return;
+                    }
+                    if(plugin.getShopRepo().isShopUnderEditOrAdd(bookMeta.getPage(bookMeta.getPageCount()))) {
+                        shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "This shop is currently under some other operation, try again later");
                         return;
                     }
                     plugin.getShopRepo().startAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString(),bookMeta.getPage(bookMeta.getPageCount()));
