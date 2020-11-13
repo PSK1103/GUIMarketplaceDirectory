@@ -16,7 +16,7 @@ The items will have their order quantity and value displayed with them. Right cl
 
 #### Making your own shop
 ##### Getting your shop listed
-Write the name and description of your shop in the format
+Write the name and description of your shop in a book in the format
 ````
 [<shop-name>]
 [<description>]
