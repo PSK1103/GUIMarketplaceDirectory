@@ -47,7 +47,7 @@ class ItemList {
 
         else return;
 
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
+        lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s")));
         lore.add("Right click to find a better deal");
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,ItemFlag.HIDE_ENCHANTS,ItemFlag.HIDE_UNBREAKABLE);
@@ -198,7 +198,7 @@ class Shop {
     }
 
     public List<ItemList> getInv() {
-        return inv;
+        return inv == null ? new ArrayList<>() : inv;
     }
 }
 
@@ -237,6 +237,10 @@ public class ShopRepo {
         waitingShops.put(uuid,shop);
         shopsUnderEdit.put(key,2);
         shopsUnderAdd.put(uuid, key);
+    }
+
+    public String getOwner(String key) {
+        return shops.get(key).getOwner();
     }
 
     public boolean getIsInitOwner(String  uuid) {

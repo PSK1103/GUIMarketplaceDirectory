@@ -67,11 +67,11 @@ public class GUI {
 
     }
 
-    public void openShopInventory(Player player, int slot,int page, List<Map<String,String>> shops) {
+    public void openShopInventory(Player player, String key,String name,int type) {
 
-        List<ItemStack> inv = plugin.getShopRepo().getShopInv(shops.get(slot + 45*page - 45).get("key"));
-        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(shops.get(slot + 45*page - 45).get("key")),Math.min(9*((inv.size()/9) + (inv.size()%9 == 0 ? 0 : 1) + (inv.size()==0?1:0)),54),shops.get(slot).get("name"));
-        for(int i=0;i<Math.min(inv.size(),54);i++) {
+        List<ItemStack> inv = plugin.getShopRepo().getShopInv(key);
+        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(key,type),Math.min(9*(inv.size()/9),45) + 9,name);
+        for(int i=0;i<Math.min(inv.size(),45);i++) {
             shopInventory.setItem(i,inv.get(i));
         }
         if(inv.size() == 0) {
@@ -82,6 +82,12 @@ public class GUI {
             empty.setItemMeta(meta);
             shopInventory.setItem(4,empty);
         }
+        ItemStack back = new ItemStack(Material.ARROW);
+        ItemMeta meta = back.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Go Back");
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        back.setItemMeta(meta);
+        shopInventory.setItem(Math.min(9*(inv.size()/9),45) + 8,back);
         player.openInventory(shopInventory);
     }
 
@@ -104,6 +110,9 @@ public class GUI {
             }
             else if (type == 2) {
                 lore.add(ChatColor.RED + "Right click to delete");
+            }
+            else if(type == 3) {
+                lore.add(ChatColor.AQUA + "Right click to recover");
             }
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -150,6 +159,9 @@ public class GUI {
             }
             else if (type == 2) {
                 lore.add(ChatColor.RED + "Right click to delete");
+            }
+            else if(type == 3) {
+                lore.add(ChatColor.AQUA + "Right click to recover");
             }
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -251,11 +263,15 @@ public class GUI {
             lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + shops.get(i).get("loc")));
             lore.add(0,ChatColor.LIGHT_PURPLE + shops.get(i).get("owners"));
             if(type == 1) {
+                lore.add(ChatColor.AQUA + "Shift click to view");
                 lore.add(ChatColor.GREEN + "Right click to approve");
                 lore.add(ChatColor.RED + "Left click to reject");
             }
             else if (type == 2) {
                 lore.add(ChatColor.RED + "Right click to remove");
+            }
+            else if(type == 3) {
+                lore.add(ChatColor.AQUA + "Right click to recover");
             }
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

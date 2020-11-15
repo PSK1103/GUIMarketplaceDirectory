@@ -121,6 +121,23 @@ public class ItemEvents implements Listener {
                 return;
             }
 
+            if(itemCheckEvent.getRawSlot() > itemCheckEvent.getInventory().getSize()) {
+                return;
+            }
+
+            if(itemCheckEvent.getCurrentItem()!= null && itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize() - 1) {
+                Player player = ((Player) itemCheckEvent.getWhoClicked());
+                player.closeInventory();
+                int type = ((ShopInvHolder) itemCheckEvent.getInventory().getHolder()).getType();
+                if(type == 0) {
+                    plugin.gui.openShopDirectory(player);
+                }
+                else
+                    plugin.gui.openShopDirectoryModerator(player,type);
+
+                return;
+            }
+
             if(itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem() != null && itemCheckEvent.getCurrentItem().getType() != Material.AIR && itemCheckEvent.getCurrentItem().getType() != Material.BARRIER) {
                 plugin.getShopRepo().findBetterAlternative(((Player) itemCheckEvent.getWhoClicked()),((ShopInvHolder)itemCheckEvent.getInventory().getHolder()).getKey() ,itemCheckEvent.getRawSlot());
             }

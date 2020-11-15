@@ -4,6 +4,8 @@ import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.InvHolders.MarketplaceBookHolder;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Jukebox;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,13 +14,114 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.material.FlowerPot;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 public class ShopEvents implements Listener {
 
     private GUIMarketplaceDirectory plugin;
+
+    private static final EnumSet<Material> INTERACTABLES = EnumSet.noneOf(Material.class);
+
+    static {
+        for (Material m : Material.values()) {
+            if(m.name().contains("BUTTON"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("DOOR"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("BED"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("FENCE_GATE"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("ITEM_FRAME"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("CHEST"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("HOPPER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("BARREL"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("FURNACE"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("DISPENSER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("DROPPER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("SHULKER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("SMOKER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("LOOM"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("CARTOGRAPHY"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("GRINDSTONE"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("STONECUTTER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("ANVIL"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("ENCHANTING"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("BREWING"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("LECTERN"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("COMPARATOR"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("REPEATER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("NOTE_BLOCK"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("TRAPDOOR"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("COMMAND"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("LEVER"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("DRAGON_EGG"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("BEACON"))
+                INTERACTABLES.add(m);
+
+            else if(m.name().contains("CAKE"))
+                INTERACTABLES.add(m);
+
+        }
+    }
 
     public ShopEvents(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
@@ -37,7 +140,7 @@ public class ShopEvents implements Listener {
                 desc.append(meta.getPage(i+1));
             }
             String data = desc.toString();
-            if(!data.matches("\\Q[\\E.*\\Q]\\E\\s*\\Q[\\E.*\\Q]\\E")) {
+            if(!data.trim().matches("\\s\\Q[\\E.*\\Q]\\E\\s*\\Q[\\E.*\\Q]\\E\\s")) {
                 editBookEvent.getPlayer().sendMessage(ChatColor.RED + "Incorrect shop initialisation, try again");
                 editBookEvent.setCancelled(true);
                 return;
@@ -79,34 +182,37 @@ public class ShopEvents implements Listener {
 
     @EventHandler
     public final void openShopDirectory(PlayerInteractEvent shopDirectoryOpenEvent) {
-        if(shopDirectoryOpenEvent.hasItem() && shopDirectoryOpenEvent.getItem().getType() == Material.WRITTEN_BOOK && shopDirectoryOpenEvent.getAction() == Action.RIGHT_CLICK_AIR) {
+        if(shopDirectoryOpenEvent.hasItem() && shopDirectoryOpenEvent.getItem().getType() == Material.WRITTEN_BOOK) {
             BookMeta bookMeta = (BookMeta) shopDirectoryOpenEvent.getItem().getItemMeta();
-            if(bookMeta.getTitle().equals("[Marketplace]")) {
-                shopDirectoryOpenEvent.setCancelled(true);
-                plugin.gui.openShopDirectory(shopDirectoryOpenEvent.getPlayer());
-            }
-            if(bookMeta.getTitle().toLowerCase().equals("[shop init]") || bookMeta.getTitle().equals("[init shop]")) {
-                shopDirectoryOpenEvent.setCancelled(true);
-                if(!plugin.getCustomConfig().getBoolean("multi-owner",false)) {
-                    return;
-                }
-                if(plugin.getShopRepo().isShopOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString(),bookMeta.getPage(bookMeta.getPageCount()))) {
-                    if(plugin.getShopRepo().isAddingItem(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString())) {
-                        shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "Finish adding item first");
-                        return;
+            if(bookMeta.getTitle().equalsIgnoreCase("[Marketplace]") || bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]")) {
+                if (shopDirectoryOpenEvent.getAction() == Action.RIGHT_CLICK_AIR || (shopDirectoryOpenEvent.getAction() == Action.RIGHT_CLICK_BLOCK && shopDirectoryOpenEvent.getClickedBlock() != null && !isInteractableWithBook(shopDirectoryOpenEvent.getClickedBlock()))) {
+                    shopDirectoryOpenEvent.setCancelled(true);
+                    if (bookMeta.getTitle().equalsIgnoreCase("[Marketplace]")) {
+                        plugin.gui.openShopDirectory(shopDirectoryOpenEvent.getPlayer());
                     }
-                    if(plugin.getShopRepo().getIsUserAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString()) && !plugin.getShopRepo().getIsAddingOwner(bookMeta.getPage(bookMeta.getPageCount()))) {
-                        shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "Finish adding owner to other shop first");
-                        return;
-                    }
-                    if(plugin.getShopRepo().isShopUnderEditOrAdd(bookMeta.getPage(bookMeta.getPageCount()))) {
-                        shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "This shop is currently under some other operation, try again later");
-                        return;
-                    }
-                    plugin.getShopRepo().startAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString(),bookMeta.getPage(bookMeta.getPageCount()));
-                    shopDirectoryOpenEvent.getPlayer().sendMessage(new String[]{ChatColor.GRAY + "Adding another owner...",ChatColor.YELLOW + "Enter player name (nil to cancel)"});
-                }
+                    else if (bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]")) {
+                        if (!plugin.getCustomConfig().getBoolean("multi-owner", false)) {
+                            return;
+                        }
+                        if (plugin.getShopRepo().isShopOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString(), bookMeta.getPage(bookMeta.getPageCount()))) {
+                            if (plugin.getShopRepo().isAddingItem(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString())) {
+                                shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "Finish adding item first");
+                                return;
+                            }
+                            if (plugin.getShopRepo().getIsUserAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString()) && !plugin.getShopRepo().getIsAddingOwner(bookMeta.getPage(bookMeta.getPageCount()))) {
+                                shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "Finish adding owner to other shop first");
+                                return;
+                            }
+                            if (plugin.getShopRepo().isShopUnderEditOrAdd(bookMeta.getPage(bookMeta.getPageCount()))) {
+                                shopDirectoryOpenEvent.getPlayer().sendMessage(ChatColor.RED + "This shop is currently under some other operation, try again later");
+                                return;
+                            }
+                            plugin.getShopRepo().startAddingOwner(shopDirectoryOpenEvent.getPlayer().getUniqueId().toString(), bookMeta.getPage(bookMeta.getPageCount()));
+                            shopDirectoryOpenEvent.getPlayer().sendMessage(new String[]{ChatColor.GRAY + "Adding another owner...", ChatColor.YELLOW + "Enter player name (nil to cancel)"});
+                        }
 
+                    }
+                }
             }
         }
     }
@@ -114,7 +220,18 @@ public class ShopEvents implements Listener {
     @EventHandler
     public final void selectShop(InventoryClickEvent shopSelectEvent) {
         if(shopSelectEvent.getInventory().getHolder() instanceof MarketplaceBookHolder) {
+            MarketplaceBookHolder holder = ((MarketplaceBookHolder) shopSelectEvent.getInventory().getHolder());
             shopSelectEvent.setCancelled(true);
+
+            if(shopSelectEvent.getRawSlot() > shopSelectEvent.getInventory().getSize() && holder.getType() == 3 && shopSelectEvent.getCurrentItem().getType() == Material.AIR && shopSelectEvent.getCursor().getType() == Material.WRITTEN_BOOK) {
+                return;
+            }
+
+            if(shopSelectEvent.getRawSlot() > shopSelectEvent.getInventory().getSize()) {
+                shopSelectEvent.setCancelled(true);
+                return;
+            }
+
             if(shopSelectEvent.getCurrentItem().getType() == Material.WRITTEN_BOOK) {
                 int currPage = 1;
                 if(shopSelectEvent.getInventory().getSize() == 54) {
@@ -122,10 +239,9 @@ public class ShopEvents implements Listener {
                         currPage = Integer.parseInt(shopSelectEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
                     }
                 }
-                MarketplaceBookHolder holder = ((MarketplaceBookHolder) shopSelectEvent.getInventory().getHolder());
                 if(holder.getType() == 0) {
                     shopSelectEvent.getWhoClicked().closeInventory();
-                    plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), shopSelectEvent.getRawSlot(), currPage, ((MarketplaceBookHolder) shopSelectEvent.getInventory().getHolder()).getShops());
+                    plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
                 }
                 else if (holder.getType() == 1) {
                     if(shopSelectEvent.isRightClick()) {
@@ -139,7 +255,7 @@ public class ShopEvents implements Listener {
                         plugin.gui.openShopDirectoryModerator(((Player) shopSelectEvent.getWhoClicked()),1);
                         return;
                     }
-                    if(shopSelectEvent.isLeftClick()) {
+                    else if(shopSelectEvent.isLeftClick()) {
                         if(plugin.getShopRepo().isUserRejectingShop(shopSelectEvent.getWhoClicked().getUniqueId().toString())) {
                             shopSelectEvent.getWhoClicked().sendMessage(ChatColor.RED + "Confirm rejection of previous shop first!");
                             return;
@@ -148,6 +264,10 @@ public class ShopEvents implements Listener {
                         shopSelectEvent.getWhoClicked().sendMessage(ChatColor.YELLOW + "Do you wish to reject this shop? (Y/N)");
                         shopSelectEvent.getWhoClicked().closeInventory();
                         return;
+                    }
+                    else if(shopSelectEvent.isShiftClick()){
+                        shopSelectEvent.getWhoClicked().closeInventory();
+                        plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
                     }
                 }
                 else if(holder.getType() == 2) {
@@ -161,7 +281,34 @@ public class ShopEvents implements Listener {
                         shopSelectEvent.getWhoClicked().closeInventory();
                         return;
                     }
+                    else {
+                        shopSelectEvent.getWhoClicked().closeInventory();
+                        plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
+                    }
                     return;
+                }
+                else if(holder.getType() == 3) {
+
+                    if(shopSelectEvent.isRightClick() && shopSelectEvent.getRawSlot() < Math.min(holder.getShops().size(),54) && shopSelectEvent.getCursor() != null && shopSelectEvent.getCursor().getType() != Material.AIR) {
+                        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+                        BookMeta meta = (BookMeta) book.getItemMeta();
+                        Map<String,String> shopDetails = holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage-1));
+                        meta.setTitle(ChatColor.GOLD + shopDetails.get("name"));
+                        meta.setPages("[" + shopDetails.get("name") + "]\n[" + shopDetails.get("desc") + "]",shopDetails.get("key"));
+                        meta.setAuthor(plugin.getShopRepo().getOwner(shopDetails.get("key")));
+                        meta.setGeneration(BookMeta.Generation.COPY_OF_ORIGINAL);
+                        book.setItemMeta(meta);
+                        shopSelectEvent.setCursor(book);
+                    }
+
+
+
+                    else {
+                        shopSelectEvent.setCancelled(true);
+                        shopSelectEvent.getWhoClicked().closeInventory();
+                        plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
+                    }
+
                 }
             }
             if(shopSelectEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
@@ -252,5 +399,10 @@ public class ShopEvents implements Listener {
             }
             return;
         }
+    }
+
+    private boolean isInteractableWithBook(Block b) {
+        Material m = b.getType();
+        return INTERACTABLES.contains(m);
     }
 }
