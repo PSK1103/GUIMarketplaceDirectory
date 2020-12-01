@@ -2,8 +2,11 @@ package me.PSK1103.GUIMarketplaceDirectory.utils;
 
 
 import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
-import me.PSK1103.GUIMarketplaceDirectory.InvHolders.MarketplaceBookHolder;
-import me.PSK1103.GUIMarketplaceDirectory.InvHolders.ShopInvHolder;
+import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
+import me.PSK1103.GUIMarketplaceDirectory.invholders.ShopInvHolder;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -21,10 +24,20 @@ import java.util.List;
 import java.util.Map;
 
 public class GUI {
-    private GUIMarketplaceDirectory plugin;
+    private final GUIMarketplaceDirectory plugin;
 
     public GUI(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
+    }
+
+    public void sendConfirmationMessage(Player player, String msg) {
+        TextComponent yes = new TextComponent(ChatColor.GOLD + "" + ChatColor.BOLD + "Y");
+        yes.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "Y"));
+
+        TextComponent no = new TextComponent(ChatColor.GOLD + "" + ChatColor.BOLD + "N");
+        no.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "N"));
+
+        player.sendMessage(new ComponentBuilder(msg + " (").color(net.md_5.bungee.api.ChatColor.YELLOW).append(yes).append("/").append(no).append(")").color(net.md_5.bungee.api.ChatColor.YELLOW).create());
     }
 
     public void openShopDirectory(Player player) {
@@ -243,7 +256,7 @@ public class GUI {
             return;
         }
 
-        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder(""),Math.min(9*(refinedItems.size()/9 + (refinedItems.size()%9) == 0 ? 0 : 1),54),"Search results");
+        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder(""),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54),"Search results");
 
         for(int i=0;i<Math.min(refinedItems.size(),54);i++) {
             refinedItemInv.setItem(i,refinedItems.get(i));
@@ -304,6 +317,51 @@ public class GUI {
         }
 
         moderator.openInventory(shopDirectory);
+    }
+
+    public void openShopEditMenu(Player player, String key) {
+        String name = plugin.getShopRepo().getShopName(key);
+        Inventory shopEditMenuInv = Bukkit.createInventory(new ShopInvHolder(key,4),9,name);
+        ItemStack addOwner = new ItemStack(Material.BEACON);
+        ItemMeta addOwnerMeta = addOwner.getItemMeta();
+        addOwnerMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + "Add owner");
+        addOwner.setItemMeta(addOwnerMeta);
+        shopEditMenuInv.setItem(2,addOwner);
+
+        ItemStack removeShop = new ItemStack(Material.FLINT_AND_STEEL);
+        ItemMeta removeShopMeta = removeShop.getItemMeta();
+        removeShopMeta.setDisplayName(ChatColor.RED + "" + ChatColor.ITALIC + "delete shop");
+        removeShop.setItemMeta(removeShopMeta);
+        shopEditMenuInv.setItem(6,removeShop);
+
+        player.openInventory(shopEditMenuInv);
+    }
+
+    public void openItemAddMenu(Player player, String key, List<ItemStack> matchingItems, ItemStack itemToAdd) {
+        Inventory itemAddMenuInv = Bukkit.createInventory(new ShopInvHolder(key,itemToAdd.clone(),5),18,"Adding Item...");
+        for(int i = 0;i<Math.min(matchingItems.size(),9);i++) {
+            ItemStack iTA = matchingItems.get(i).clone();
+            ItemMeta meta = iTA.getItemMeta();
+            List<String> lore = meta.getLore();
+            lore.add(ChatColor.RED + "Right click to remove");
+            meta.setLore(lore);
+            iTA.setItemMeta(meta);
+            itemAddMenuInv.setItem(i,iTA);
+        }
+
+        ItemStack addItem = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta addItemMeta = addItem.getItemMeta();
+        addItemMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.ITALIC + "Add item");
+        addItem.setItemMeta(addItemMeta);
+        itemAddMenuInv.setItem(11,addItem);
+
+        ItemStack removeAllItems = new ItemStack(Material.FLINT_AND_STEEL);
+        ItemMeta removeAllItemsMeta = removeAllItems.getItemMeta();
+        removeAllItemsMeta.setDisplayName(ChatColor.RED + "" + ChatColor.ITALIC + "Remove all items");
+        removeAllItems.setItemMeta(removeAllItemsMeta);
+        itemAddMenuInv.setItem(15,removeAllItems);
+
+        player.openInventory(itemAddMenuInv);
     }
 
 }

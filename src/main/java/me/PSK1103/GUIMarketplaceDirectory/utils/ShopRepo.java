@@ -5,14 +5,21 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import de.tr7zw.nbtapi.NBTCompound;
+import net.minecraft.server.v1_16_R3.NBTTagCompound;
+import de.tr7zw.nbtapi.NBTItem;
+import de.tr7zw.nbtapi.NBTListCompound;
 import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
+import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.*;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,12 +27,15 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class ItemList {
     ItemStack item;
     int price;
     String qty;
     String name,customName;
+    String customType;
+    Map<String,Object> extraInfo;
     ItemList() {}
 
     ItemList(String itemName, String qty, int price) {
@@ -33,6 +43,8 @@ class ItemList {
         this.qty = qty;
         this.price = price;
         this.customName = "";
+        this.customType = "";
+        this.extraInfo = new HashMap<>(0);
         item = new ItemStack(Material.getMaterial(itemName));
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>(2);
@@ -48,27 +60,111 @@ class ItemList {
         else return;
 
         lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s")));
-        lore.add("Right click to find a better deal");
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,ItemFlag.HIDE_ENCHANTS,ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
     }
 
-    ItemList(String itemName) {
+    ItemList(String itemName,ItemMeta meta) {
         this.name = itemName;
         this.customName = "";
+        this.extraInfo = new HashMap<>(0);
         item = new ItemStack(Material.getMaterial(itemName));
+        item.setItemMeta(meta);
+        if(meta.hasDisplayName())
+            this.customName = meta.getDisplayName();
         qty = "";
         price = 0;
     }
-    ItemList(String itemName,String customName) {
-        this.name = itemName;
-        item = new ItemStack(Material.getMaterial(itemName));
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(customName);
-        item.setItemMeta(meta);
-        qty = "";
-        price = 0;
+
+    public static ItemStack getCustomItem(ItemStack item, String customType, Map<String,Object> extraInfo) {
+        switch (customType) {
+            case "head":
+                NBTTagCompound tagCompound = new NBTTagCompound();
+                NBTItem head = new NBTItem(item);
+                NBTCompound skull = head.addCompound("SkullOwner");
+                skull.setString("Name", extraInfo.get("name").toString());
+                skull.setString("Id", extraInfo.get("uuid").toString());
+                NBTListCompound texture = skull.addCompound("Properties").getCompoundList("textures").addCompound();
+                texture.setString("Signature", extraInfo.get("signature").toString());
+                texture.setString("Value", extraInfo.get("value").toString());
+                item = head.getItem();
+                break;
+            case "potion":
+            case "tippedArrow":
+                PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
+                PotionData base = new PotionData(PotionType.valueOf(extraInfo.get("effect").toString()), (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
+                potionMeta.setBasePotionData(base);
+                item.setItemMeta(potionMeta);
+                break;
+            case "rocket":
+                NBTItem rocket = new NBTItem(item);
+                NBTCompound fl = rocket.addCompound("Fireworks");
+                double flno = (Double) extraInfo.get("flight");
+                fl.setByte("Flight", (byte) flno);
+                item = rocket.getItem();
+                FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                List<Object> effects = (List<Object>) extraInfo.get("effects");
+                if (effects != null && effects.size() > 0) {
+                    List<FireworkEffect> fireworkEffects = new ArrayList<>();
+                    effects.forEach(o -> {
+                        Map<String, Object> effect = ((Map<String, Object>) o);
+                        List<Color> colors = new ArrayList<>();
+                        List<Color> fadeColors = new ArrayList<>();
+                        ((List<Double>) effect.get("colors")).forEach(aDouble -> colors.add(Color.fromRGB(aDouble.intValue())));
+                        ((List<Double>) effect.get("fadeColors")).forEach(aDouble -> fadeColors.add(Color.fromRGB(aDouble.intValue())));
+                        FireworkEffect fireworkEffect = FireworkEffect.builder()
+                                .flicker((Boolean) effect.get("flicker"))
+                                .trail((Boolean) effect.get("trail"))
+                                .with(FireworkEffect.Type.valueOf(effect.get("type").toString()))
+                                .withColor(colors)
+                                .withFade(fadeColors)
+                                .build();
+                        fireworkEffects.add(fireworkEffect);
+                    });
+                    fireworkMeta.addEffects(fireworkEffects);
+                    item.setItemMeta(fireworkMeta);
+                }
+                break;
+            case "banner":
+                BannerMeta bannerMeta = (BannerMeta) item.getItemMeta();
+                List<Object> patterns = (List<Object>) extraInfo.get("patterns");
+                List<Pattern> bannerPatterns = new ArrayList<>();
+                patterns.forEach(o -> {
+                    Map<String, Object> pattern = (Map<String, Object>) o;
+                    Pattern bannerPattern = new Pattern(DyeColor.valueOf(pattern.get("color").toString()), PatternType.valueOf(pattern.get("type").toString()));
+                    bannerPatterns.add(bannerPattern);
+                });
+                bannerMeta.setPatterns(bannerPatterns);
+                item.setItemMeta(bannerMeta);
+                break;
+            case "shulker":
+                List<Map<String, Object>> contents = (List<Map<String, Object>>) extraInfo.get("contents");
+                List<ItemStack> items = new ArrayList<>();
+                contents.forEach(content -> {
+                    ItemStack itemStack = new ItemStack(Material.valueOf(content.get("name").toString()), Double.valueOf(content.get("quantity").toString()).intValue());
+                    if (content.containsKey("customName")) {
+                        ItemMeta meta = itemStack.getItemMeta();
+                        meta.setDisplayName(content.get("customName").toString());
+                    }
+                    if (content.containsKey("customType")) {
+                        getCustomItem(itemStack, content.get("customType").toString(), (Map<String, Object>) content.get("extraInfo"));
+                    }
+
+                    items.add(itemStack);
+
+                });
+
+                BlockStateMeta blockStateMeta = (BlockStateMeta) item.getItemMeta();
+                ShulkerBox shulkerBox = (ShulkerBox) blockStateMeta.getBlockState();
+                shulkerBox.getInventory().setContents(items.toArray(new ItemStack[0]));
+                shulkerBox.update(true, false);
+                blockStateMeta.setBlockState(shulkerBox);
+                item.setItemMeta(blockStateMeta);
+
+                break;
+        }
+        return item;
     }
 
     public void setCustomName(String customName) {
@@ -76,6 +172,12 @@ class ItemList {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(customName);
         item.setItemMeta(meta);
+    }
+
+    public void setExtraInfo(Map<String, Object> extraInfo, String customType) {
+        this.extraInfo = extraInfo;
+        this.customType = customType;
+        this.item = getCustomItem(item,customType,extraInfo);
     }
 
     public void setQty(String qty) {
@@ -98,7 +200,6 @@ class ItemList {
         else return;
 
         lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
-        lore.add("Right click to find a better deal");
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,ItemFlag.HIDE_ENCHANTS,ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
@@ -203,14 +304,15 @@ class Shop {
 }
 
 public class ShopRepo {
-    private Map<String,Shop> shops;
-    private Map<String,Shop> pendingShops;
-    private Map<String,Shop> waitingShops;
-    private GUIMarketplaceDirectory plugin;
-    private HashMap<String,String> shopsUnderAdd;
-    private HashMap<String,Integer> shopsUnderEdit;
-    private HashMap<String,ItemList> itemToAdd;
-    private HashMap<String,String> shopsUnderReject,shopsUnderRemove;
+    private final Map<String,Shop> shops;
+    private final Map<String,Shop> pendingShops;
+    private final Map<String,Shop> waitingShops;
+    private final GUIMarketplaceDirectory plugin;
+    private final HashMap<String,String> shopsUnderAdd;
+    private final HashMap<String,Integer> shopsUnderEdit;
+    private final HashMap<String,ItemList> itemToAdd;
+    private final HashMap<String,String> shopsUnderReject;
+    private final HashMap<String,String> shopsUnderRemove;
 
     public ShopRepo(GUIMarketplaceDirectory plugin) {
         this.shops = new HashMap<>();
@@ -222,7 +324,13 @@ public class ShopRepo {
         waitingShops = new HashMap<>();
         itemToAdd = new HashMap<>();
         this.plugin = plugin;
-        initShops();
+        if(initShops()) {
+            plugin.getLogger().info("Shops loaded");
+        }
+        else {
+            plugin.getLogger().severe("Error while loading shops, disabling GUIMD");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+        }
     }
 
     public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc) {
@@ -262,6 +370,15 @@ public class ShopRepo {
             return -1;
         shopsUnderAdd.put(uuid, key);
         shopsUnderEdit.put(key,1);
+        return 1;
+    }
+
+    public int startRemovingShop(String uuid, String key) {
+        if(shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
+            return 0;
+        if(!shops.containsKey(key) && !pendingShops.containsKey(key))
+            return -1;
+        shopsUnderRemove.put(uuid, key);
         return 1;
     }
 
@@ -333,7 +450,12 @@ public class ShopRepo {
                     item.put("qty",itemList.qty);
                     if(itemList.item.getItemMeta().hasDisplayName())
                         item.put("customName",itemList.item.getItemMeta().getDisplayName());
-
+                    if(itemList.extraInfo!=null && itemList.extraInfo.size() > 0) {
+                        item.put("extraInfo",itemList.extraInfo);
+                    }
+                    if(itemList.customType!=null && itemList.customType.length()>0) {
+                        item.put("customType",itemList.customType);
+                    }
                     items.add(item);
                 });
 
@@ -360,9 +482,15 @@ public class ShopRepo {
                     item.put("name",itemList.item.getType().getKey().getKey().toUpperCase());
                     item.put("price",Integer.valueOf(itemList.price).toString());
                     item.put("qty",itemList.qty);
-                    if(itemList.item.getItemMeta().hasDisplayName())
-                        item.put("customName",itemList.item.getItemMeta().getDisplayName());
-
+                    if(itemList.item.getItemMeta().hasDisplayName()) {
+                        item.put("customName", itemList.item.getItemMeta().getDisplayName());
+                    }
+                    if(itemList.extraInfo!=null && itemList.extraInfo.size() > 0) {
+                        item.put("extraInfo",itemList.extraInfo);
+                    }
+                    if(itemList.customType!=null && itemList.customType.length()>0) {
+                        item.put("customType",itemList.customType);
+                    }
                     items.add(item);
                 });
 
@@ -420,6 +548,11 @@ public class ShopRepo {
                                 ItemList item = new ItemList(itemJSON.get("name").toString(), itemJSON.get("qty").toString(), Integer.parseInt(itemJSON.get("price").toString()));
                                 if (itemJSON.get("customName") != null)
                                     item.setCustomName(itemJSON.get("customName").toString());
+                                if(itemJSON.containsKey("extraInfo") && itemJSON.containsKey("customType")) {
+                                    JSONObject headData = ((JSONObject) itemJSON.get("extraInfo"));
+                                    HashMap<String, Object> headInfo = new Gson().fromJson(headData.toString(), HashMap.class);
+                                    item.setExtraInfo(headInfo,itemJSON.get("customType").toString());
+                                }
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
@@ -461,6 +594,11 @@ public class ShopRepo {
                                 ItemList item = new ItemList(itemJSON.get("name").toString(), itemJSON.get("qty").toString(), Integer.parseInt(itemJSON.get("price").toString()));
                                 if (itemJSON.get("customName") != null)
                                     item.setCustomName(itemJSON.get("customName").toString());
+                                if(itemJSON.containsKey("extraInfo") && itemJSON.containsKey("customType")) {
+                                    JSONObject headData = ((JSONObject) itemJSON.get("extraInfo"));
+                                    HashMap<String, Object> headInfo = new Gson().fromJson(headData.toString(), HashMap.class);
+                                    item.setExtraInfo(headInfo,itemJSON.get("customType").toString());
+                                }
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
@@ -497,23 +635,8 @@ public class ShopRepo {
         return itemToAdd.containsKey(key) || shopsUnderEdit.containsKey(key);
     }
 
-    public int initItemAddition(String uuid, String key, String name) {
-        if(!shops.containsKey(key) && !pendingShops.containsKey(key))
-            return -1;
-
-        if(shopsUnderAdd.containsKey(uuid)) {
-            shopsUnderAdd.put(uuid,key);
-            ItemList item = new ItemList(name);
-            itemToAdd.put(key,item);
-            return 0;
-        }
-
-        shopsUnderAdd.put(uuid,key);
-        ItemList item = new ItemList(name);
-        itemToAdd.put(key,item);
-        return 1;
-    }
-    public int initItemAddition(String uuid, String key, String name, String customName) {
+    public int initItemAddition(String uuid, String key, String name, ItemStack itemStack) {
+        int res = 1;
         if(!shops.containsKey(key) && !pendingShops.containsKey(key))
             return -1;
 
@@ -521,10 +644,187 @@ public class ShopRepo {
             return 0;
         }
 
+        ItemList item =new ItemList(name,itemStack.getItemMeta());
+
+        if(name.contains("SHULKER_BOX")) {
+            if(itemStack.getItemMeta() instanceof BlockStateMeta){
+                BlockStateMeta im = (BlockStateMeta)itemStack.getItemMeta();
+                if(im.getBlockState() instanceof ShulkerBox){
+                    ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+
+                    List<Map<String,Object>> contents = new ArrayList<>();
+
+                    for(int i=0;i<27;i++) {
+                        ItemStack itemStack1 = shulker.getSnapshotInventory().getItem(i);
+                        if(itemStack1 == null || itemStack1.getType() == Material.AIR)
+                            continue;
+
+                        Map<String,Object> content = new HashMap<>();
+                        content.put("name",itemStack1.getType().getKey().getKey().toUpperCase());
+                        content.put("quantity", itemStack1.getAmount());
+
+                        if(itemStack1.getType() == Material.PLAYER_HEAD) {
+                            NBTItem nbtItem = new NBTItem(itemStack1);
+                            NBTCompound skullOwner = nbtItem.getCompound("SkullOwner");
+                            if(skullOwner != null) {
+                                Map<String, Object> skullData = new HashMap<>();
+                                SkullMeta skullMeta = (SkullMeta) itemStack1.getItemMeta();
+                                skullData.put("name", skullMeta.getOwningPlayer().getName());
+                                skullData.put("uuid",skullMeta.getOwningPlayer().getUniqueId().toString());
+                                skullData.put("value",skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Value"));
+                                skullData.put("signature",skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Signature"));
+                                content.put("extraInfo",skullData);
+                                content.put("customType","head");
+                                item.customType = "head";
+                            }
+                            else res = 2;
+                        }
+                        else if (name.contains("POTION")) {
+                            PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
+                            Map<String,Object> data = new HashMap<>();
+                            PotionData potionType = potionMeta.getBasePotionData();
+                            data.put("effect",potionType.getType().getEffectType().getName().toUpperCase());
+                            data.put("upgraded",potionType.isUpgraded());
+                            data.put("extended",potionType.isExtended());
+                            content.put("extraInfo",data);
+                            content.put("customType","potion");
+                        }
+                        else if(name.contains("FIREWORK_ROCKET")) {
+                            FireworkMeta rocketMeta = (FireworkMeta) itemStack1.getItemMeta();
+                            List<Object> effects = new ArrayList<>();
+                            rocketMeta.getEffects().forEach(fireworkEffect -> {
+                                Map<String,Object> effect = new HashMap<>();
+                                effect.put("type",fireworkEffect.getType());
+                                effect.put("flicker",fireworkEffect.hasFlicker());
+                                effect.put("trail",fireworkEffect.hasTrail());
+                                List<Integer> colors = new ArrayList<>();
+                                List<Integer> fadeColors = new ArrayList<>();
+                                fireworkEffect.getColors().forEach(color -> colors.add(color.asRGB()));
+                                fireworkEffect.getFadeColors().forEach(fadeColor -> fadeColors.add(fadeColor.asRGB()));
+                                effect.put("colors",colors);
+                                effect.put("fadeColors",fadeColors);
+                                effects.add(effect);
+                            });
+                            NBTItem nbtItem = new NBTItem(itemStack1);
+                            Map<String,Object> fireworksData = new HashMap<>();
+                            fireworksData.put("flight",nbtItem.getCompound("Fireworks").getByte("Flight"));
+                            fireworksData.put("effects",effects);
+                            content.put("extraInfo",fireworksData);
+                            content.put("customType","rocket");
+                        }
+                        else if(name.contains("TIPPED_ARROW")) {
+                            PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
+                            Map<String,Object> data = new HashMap<>();
+                            PotionData potionType = potionMeta.getBasePotionData();
+                            data.put("effect",potionType.getType().getEffectType().getName().toUpperCase());
+                            data.put("upgraded",potionType.isUpgraded());
+                            data.put("extended",potionType.isExtended());
+                            content.put("extraInfo",data);
+                            content.put("customType","tippedArrow");
+                        }
+                        else if(name.contains("BANNER")) {
+                            BannerMeta bannerMeta = (BannerMeta) itemStack1.getItemMeta();
+                            List<Object> patterns = new ArrayList<>();
+                            bannerMeta.getPatterns().forEach(pattern -> {
+                                Map<String,Object> patternData = new HashMap<>();
+                                patternData.put("color",pattern.getColor().name().toUpperCase());
+                                patternData.put("type",pattern.getPattern().name().toUpperCase());
+                                patterns.add(patternData);
+                            });
+                            Map<String,Object> info = new HashMap<>();
+                            info.put("patterns",patterns);
+                            content.put("extraInfo",info);
+                            content.put("customType","banner");
+                        }
+
+                        contents.add(content);
+                    }
+
+                    item.extraInfo = new HashMap<>();
+                    item.extraInfo.put("contents",contents);
+                    item.customType = "shulker";
+
+                }
+            }
+        }
+
+        else if(itemStack.getType() == Material.PLAYER_HEAD) {
+            NBTItem nbtItem = new NBTItem(itemStack);
+            NBTCompound skullOwner = nbtItem.getCompound("SkullOwner");
+            if(skullOwner != null) {
+                Map<String, Object> skullData = new HashMap<>();
+                SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
+                skullData.put("name", skullMeta.getOwningPlayer().getName());
+                skullData.put("uuid",skullMeta.getOwningPlayer().getUniqueId().toString());
+                skullData.put("value",skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Value"));
+                skullData.put("signature",skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Signature"));
+                item.extraInfo = skullData;
+                item.customType = "head";
+            }
+            else res = 2;
+        }
+        
+        else if (name.contains("POTION")) {
+            PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+            Map<String,Object> data = new HashMap<>();
+            PotionData potionType = potionMeta.getBasePotionData();
+            data.put("effect",potionType.getType().getEffectType().getName().toUpperCase());
+            data.put("upgraded",potionType.isUpgraded());
+            data.put("extended",potionType.isExtended());
+            item.extraInfo = data;
+            item.customType = "potion";
+        }
+        else if(name.contains("FIREWORK_ROCKET")) {
+            FireworkMeta rocketMeta = (FireworkMeta) itemStack.getItemMeta();
+            List<Object> effects = new ArrayList<>();
+            rocketMeta.getEffects().forEach(fireworkEffect -> {
+                Map<String,Object> effect = new HashMap<>();
+                effect.put("type",fireworkEffect.getType());
+                effect.put("flicker",fireworkEffect.hasFlicker());
+                effect.put("trail",fireworkEffect.hasTrail());
+                List<Integer> colors = new ArrayList<>();
+                List<Integer> fadeColors = new ArrayList<>();
+                fireworkEffect.getColors().forEach(color -> colors.add(color.asRGB()));
+                fireworkEffect.getFadeColors().forEach(fadeColor -> fadeColors.add(fadeColor.asRGB()));
+                effect.put("colors",colors);
+                effect.put("fadeColors",fadeColors);
+                effects.add(effect);
+            });
+            NBTItem nbtItem = new NBTItem(itemStack);
+            Map<String,Object> fireworksData = new HashMap<>();
+            fireworksData.put("flight",nbtItem.getCompound("Fireworks").getByte("Flight"));
+            fireworksData.put("effects",effects);
+            item.extraInfo = fireworksData;
+            item.customType = "rocket";
+        }
+        else if(name.contains("TIPPED_ARROW")) {
+            PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+            Map<String,Object> data = new HashMap<>();
+            PotionData potionType = potionMeta.getBasePotionData();
+            data.put("effect",potionType.getType().getEffectType().getName().toUpperCase());
+            data.put("upgraded",potionType.isUpgraded());
+            data.put("extended",potionType.isExtended());
+            item.extraInfo = data;
+            item.customType = "tippedArrow";
+        }
+
+        else if(name.contains("BANNER")) {
+            BannerMeta bannerMeta = (BannerMeta) itemStack.getItemMeta();
+            List<Object> patterns = new ArrayList<>();
+            bannerMeta.getPatterns().forEach(pattern -> {
+                Map<String,Object> patternData = new HashMap<>();
+                patternData.put("color",pattern.getColor().name().toUpperCase());
+                patternData.put("type",pattern.getPattern().name().toUpperCase());
+                patterns.add(patternData);
+            });
+            item.extraInfo = new HashMap<>();
+            item.extraInfo.put("patterns",patterns);
+            item.customType = "banner";
+        }
+
         shopsUnderAdd.put(uuid,key);
-        ItemList item = new ItemList(name,customName);
         itemToAdd.put(key,item);
-        return 1;
+        return res;
     }
 
     public void initShopOwnerAddition(String uuid) {
@@ -660,7 +960,16 @@ public class ShopRepo {
             return inv;
         }
 
-        shop.getInv().forEach(itemList -> inv.add(itemList.getItem()));
+        shop.getInv().forEach(itemList -> {
+            ItemStack item = itemList.item.clone();
+            ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
+            lore.add("Right click to find a better deal");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+            inv.add(item);
+
+        });
         return inv;
     }
 
@@ -692,7 +1001,7 @@ public class ShopRepo {
                     val/= itemList.price;
 
                     if(val > finalValue) {
-                        player.sendMessage(ChatColor.GOLD + shop.getName() + ChatColor.WHITE + " has a better deal: " + ChatColor.DARK_AQUA + String.format("%.2f",val) + " items per dia");
+                        player.sendMessage(ChatColor.GOLD + shop.getName() + ChatColor.WHITE + " has a better deal: " + itemList.getItem().getLore().get(0));
                         found[0] = true;
                     }
                 }
@@ -723,6 +1032,26 @@ public class ShopRepo {
             }
         });
         return detailsList;
+    }
+
+    public List<ItemStack> getMatchingItems(String key,String itemName) {
+        Shop shop = shops.get(key);
+        List<ItemStack> items = new ArrayList<>();
+        shop.getInv().forEach(itemList -> {
+            if(itemList.name.equalsIgnoreCase(itemName))
+                items.add(itemList.item);
+        });
+        return items;
+    }
+
+    public void removeMatchingItems(String key,String itemName) {
+        Shop shop = shops.get(key);
+        shop.setInv(shop.getInv().stream().filter(itemList -> !itemList.name.equals(itemName)).collect(Collectors.toList()));
+    }
+
+    public void removeItem(String key, ItemStack item) {
+        Shop shop = shops.get(key);
+        shop.setInv(shop.getInv().stream().filter(itemList -> itemList.getItem().getType() != item.getType() || !item.getItemMeta().getLore().get(0).equals(itemList.item.getItemMeta().getLore().get(0))).collect(Collectors.toList()));
     }
 
     public List<Map<String,String>> getRefinedShopsByPlayer(String searchKey) {

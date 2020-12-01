@@ -1,18 +1,19 @@
-package me.PSK1103.GUIMarketplaceDirectory.InvHolders;
+package me.PSK1103.GUIMarketplaceDirectory.invholders;
 
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class MarketplaceBookHolder implements InventoryHolder {
-    List<Map<String,String>> shops;
-    int type;
+    final List<Map<String,String>> shops;
+    final int type;
 
     public MarketplaceBookHolder(List<Map<String, String>> shops) {
-        this.shops = shops;
+        this.shops = shops!=null ? shops : new ArrayList<>();
         this.type = 0;
     }
 

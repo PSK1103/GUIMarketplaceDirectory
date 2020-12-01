@@ -1,11 +1,10 @@
 package me.PSK1103.GUIMarketplaceDirectory;
 
-import me.PSK1103.GUIMarketplaceDirectory.EventHandler.ItemEvents;
-import me.PSK1103.GUIMarketplaceDirectory.EventHandler.ShopEvents;
+import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ItemEvents;
+import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ShopEvents;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUIMarketplaceCommands;
 import me.PSK1103.GUIMarketplaceDirectory.utils.ShopRepo;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,7 +14,6 @@ import org.json.simple.JSONObject;
 
 import javax.annotation.Nullable;
 import java.io.*;
-import java.util.EventListener;
 
 public class GUIMarketplaceDirectory extends JavaPlugin {
 

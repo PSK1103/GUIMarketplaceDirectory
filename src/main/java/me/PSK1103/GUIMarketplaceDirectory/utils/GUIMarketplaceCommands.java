@@ -14,7 +14,7 @@ import java.util.List;
 
 public class GUIMarketplaceCommands implements TabExecutor {
 
-    GUIMarketplaceDirectory plugin;
+    final GUIMarketplaceDirectory plugin;
 
     public GUIMarketplaceCommands(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
