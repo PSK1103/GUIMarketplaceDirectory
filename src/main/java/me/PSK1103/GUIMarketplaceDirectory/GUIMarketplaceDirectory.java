@@ -4,6 +4,7 @@ import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ItemEvents;
 import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ShopEvents;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUIMarketplaceCommands;
+import me.PSK1103.GUIMarketplaceDirectory.utils.Metrics;
 import me.PSK1103.GUIMarketplaceDirectory.utils.ShopRepo;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -22,11 +23,16 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
     public GUI gui;
     private File customConfigFile;
     private FileConfiguration customConfig;
+    private Metrics metrics;
+
+    private static final int pluginId = 9879;
 
     @Override
     public void onEnable() {
         customConfig = null;
         saveDefaultConfig();
+        if(getCustomConfig().getBoolean("enable-bstats",true))
+            metrics = new Metrics(this, pluginId);
         this.shopRepo = new ShopRepo(this);
         this.gui = new GUI(this);
         getServer().getPluginManager().registerEvents(new ShopEvents(this),this);
@@ -88,4 +94,9 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
 
         return customConfig;
     }
+
+    public Metrics getMetrics(){
+        return metrics;
+    }
+
 }

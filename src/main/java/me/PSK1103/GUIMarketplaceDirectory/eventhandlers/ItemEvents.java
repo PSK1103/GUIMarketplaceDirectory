@@ -160,7 +160,7 @@ public class ItemEvents implements Listener {
                         if(res == -1)
                             player.sendMessage(ChatColor.RED + "This shop doesn't exist");
                         else
-                            player.sendMessage(ChatColor.YELLOW + "Do you wish to remove this shop (Y/N)?");
+                            plugin.gui.sendConfirmationMessage(player,"Do you wish to remove this shop?");
                     }
                 }
                 else if(type == 5) {

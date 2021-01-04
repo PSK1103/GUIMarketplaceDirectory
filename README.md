@@ -36,6 +36,10 @@ Open your inventory and right click on an item you want to add with the book as 
 
 You will be prompted to first enter the unit amount in the form `<shulker>:<stack>:<unit>`, and the the price in diamonds.
 
+In case you want to add different versions of the same item, do this:
+
+<img src="Captures/item_modify.gif">
+
 Make sure to set quantity as per the rule stated, or you item addition will be aborted. Also, use common sense to add quantities, for eg, if you want to sell a shulker of coal, you could either 
 sell coal with the unit amount in the format `1:0:0`, or you could sell a shulker renamed to "Shulker of Coal" with unit amount in the format `0:0:1`.
 
@@ -47,6 +51,13 @@ You can search the directory by either items sold, shop name, or owner's name. T
 `/guimd search shop <search-key>`: Returns all shops that match the search key.
 
 `/guimd search player <search-key>`: Returns all shops whose owner's ign contains the search key.
+
+<img src="Captures/search.gif">
+
+#### Removing your shop
+You can remove your shop by interacting with the shop book:
+
+<img src="Captures/shop_edit.gif">
 
 ### Optional Utilities
 #### Multi owner support
@@ -66,6 +77,7 @@ approve, or left click to reject. Approval is immediate, but rejection will prov
 `/guimd moderate review`: This will open up an inventory style GUI similar to the Marketplace Directory. Moderators can right click on a shop to remove a shop if they deem it so. This will prompt
 the moderator to confirm the removal of the shop.
 
-##### By default, these two utilities are enabled. It is recommended not to turn off moderation.
+`/guimd moderate recover`: This utility can be used to recover shop edit books if the owner has lost it. This will open up an inventory style GUI similar to the Marketplace Directory containing 
+approved shops. Moderators can right click on a shop to make a copy of the shop edit book. 
 
-Additional unused utility: Allow offline players to be added as owners. This has not been added due to the inconclusivity in the decision if it should be added or not. 
+##### By default, these three utilities are enabled. It is recommended not to turn off moderation.

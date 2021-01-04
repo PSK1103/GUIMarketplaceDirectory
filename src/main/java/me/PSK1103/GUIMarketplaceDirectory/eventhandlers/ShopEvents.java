@@ -50,20 +50,16 @@ public class ShopEvents implements Listener {
                             }
                             else if (bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]")) {
                                 if (!ShopEvents.this.plugin.getCustomConfig().getBoolean("multi-owner", false)) {
-                                    super.write(ctx, packet, promise);
                                     return;                                }
                                 if (ShopEvents.this.plugin.getShopRepo().isShopOwner(player.getUniqueId().toString(), bookMeta.getPage(bookMeta.getPageCount()))) {
                                     if (ShopEvents.this.plugin.getShopRepo().isAddingItem(player.getUniqueId().toString())) {
                                         player.sendMessage(ChatColor.RED + "Finish adding item first");
-                                        super.write(ctx, packet, promise);
                                         return;                                    }
                                     if (ShopEvents.this.plugin.getShopRepo().getIsUserAddingOwner(player.getUniqueId().toString()) && !ShopEvents.this.plugin.getShopRepo().getIsAddingOwner(bookMeta.getPage(bookMeta.getPageCount()))) {
                                         player.sendMessage(ChatColor.RED + "Finish adding owner to other shop first");
-                                        super.write(ctx, packet, promise);
                                         return;                                    }
                                     if (ShopEvents.this.plugin.getShopRepo().isShopUnderEditOrAdd(bookMeta.getPage(bookMeta.getPageCount()))) {
                                         player.sendMessage(ChatColor.RED + "This shop is currently under some other operation, try again later");
-                                        super.write(ctx, packet, promise);
                                         return;
                                     }
                                     Bukkit.getScheduler().runTask(plugin,()->plugin.gui.openShopEditMenu(player,bookMeta.getPage(bookMeta.getPageCount())));

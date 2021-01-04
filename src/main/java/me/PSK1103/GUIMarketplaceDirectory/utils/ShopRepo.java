@@ -326,6 +326,8 @@ public class ShopRepo {
         this.plugin = plugin;
         if(initShops()) {
             plugin.getLogger().info("Shops loaded");
+            if(plugin.getCustomConfig().getBoolean("enable-bstats",true))
+                addShopCountMetric();
         }
         else {
             plugin.getLogger().severe("Error while loading shops, disabling GUIMD");
@@ -1104,6 +1106,11 @@ public class ShopRepo {
             });
         });
         return searchResults;
+    }
+
+    private void addShopCountMetric() {
+        plugin.getMetrics().addCustomChart(new Metrics.SingleLineChart("shop_items",() -> shops.values().stream().mapToInt(shop -> shop.getInv().size()).sum()));
+        plugin.getMetrics().addCustomChart(new Metrics.SingleLineChart("shops", shops::size));
     }
 
 }

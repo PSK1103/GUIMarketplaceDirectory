@@ -6,4 +6,8 @@ multi-owner: true
 
 #allows adding offline players as owners (not recommended)
 #only works when multi-player is true
-allow-add-offline-players: false
+#allow-add-offline-players: false
+
+#enables bstats
+#It is recommended that you keep this on so that I can get a rough estimate of how my plugin is performing
+enable-bstats: true

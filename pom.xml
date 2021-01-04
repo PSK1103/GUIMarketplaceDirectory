@@ -6,7 +6,7 @@
 
     <groupId>me.PSK1103</groupId>
     <artifactId>GUIMarketplaceDirectory</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.0</version>
 
     <repositories>
         <repository>
@@ -39,6 +39,7 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
