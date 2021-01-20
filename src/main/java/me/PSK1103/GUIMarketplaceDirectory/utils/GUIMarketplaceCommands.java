@@ -1,6 +1,7 @@
 package me.PSK1103.GUIMarketplaceDirectory.utils;
 
 import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,6 +28,10 @@ public class GUIMarketplaceCommands implements TabExecutor {
         if (label.equals("guimarketplacedirectory") || label.equals("gmd") || label.equals("guimd")) {
             if (args.length >= 3) {
                 if (args[0].equals("search")) {
+                    if(commandSender instanceof ConsoleCommandSender) {
+                        commandSender.sendMessage(ChatColor.RED + "You do not have permissions to use this command");
+                        return true;
+                    }
                     switch (args[1]) {
                         case "shop":
                         case "s":
@@ -61,8 +66,8 @@ public class GUIMarketplaceCommands implements TabExecutor {
                 switch (args[0]) {
                     case "moderate":
                     case "m":
-                        if (!commandSender.hasPermission("GUIMD.moderate")) {
-                            commandSender.sendMessage(ChatColor.RED + "You do not have permissions to moderate the marketplace directory");
+                        if (!commandSender.hasPermission("GUIMD.moderate") || commandSender instanceof ConsoleCommandSender) {
+                            commandSender.sendMessage(ChatColor.RED + "You do not have permissions to use this command");
                             return true;
                         }
                         if (!plugin.getCustomConfig().getBoolean("moderate-directory", false)) {
@@ -89,7 +94,6 @@ public class GUIMarketplaceCommands implements TabExecutor {
             if (args.length == 1) {
                 switch (args[0]) {
                     case "help":
-                        //TODO: add help message
                         commandSender.sendMessage(ChatColor.LIGHT_PURPLE + "=============GUIMarketplaceDirectory v" + plugin.getDescription().getVersion() + "=============");
                         commandSender.sendMessage(ChatColor.GOLD + "/guimd search [item/player/shop] (key): " + ChatColor.GREEN + "Search for items via item name or shops via shop name/player name");
                         if(commandSender.hasPermission("GUIMD.moderate")) {
@@ -108,6 +112,14 @@ public class GUIMarketplaceCommands implements TabExecutor {
                         }
                         plugin.reloadCustomConfig();
                         return true;
+                    case "dir":
+                    case "d":
+                        if(commandSender instanceof Player) {
+                            Player player = (Player) commandSender;
+                            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "give " + player.getDisplayName() + " written_book{display:{Name:'{\"text\":\"Marketplace Directory\",\"color\":\"gold\",\"bold\":false,\"italic\":false,\"underlined\":false,\"strikethrough\":false,\"obfuscated\":false}'},title:\"[Marketplace]\",author:\"PSK1103\"} 1");
+                            return true;
+                        }
+                        commandSender.sendMessage("Use this command as player");
                 }
             }
         }
@@ -122,6 +134,7 @@ public class GUIMarketplaceCommands implements TabExecutor {
 
             if (args.length == 1) {
                 if (args[0].length() == 0) {
+                    hints.add("dir");
                     hints.add("help");
                     if (commandSender.hasPermission("GUIMD.moderate")) {
                         hints.add("moderate");
@@ -147,6 +160,8 @@ public class GUIMarketplaceCommands implements TabExecutor {
                             hints.add("search");
                     } else if ("help".startsWith(args[0]) && !args[0].equals("help"))
                         hints.add("help");
+                    else if ("dir".startsWith(args[0]) && !args[0].equals("dir"))
+                        hints.add("dir");
                 }
             }
 
@@ -201,6 +216,7 @@ public class GUIMarketplaceCommands implements TabExecutor {
             }
 
             if (args.length == 0) {
+                hints.add("dir");
                 hints.add("help");
                 if (commandSender.hasPermission("GUIMD.moderate")) {
                     hints.add("moderate");
