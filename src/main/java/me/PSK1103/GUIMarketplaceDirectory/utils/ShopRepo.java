@@ -337,7 +337,10 @@ public class ShopRepo {
 
     public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc) {
         Shop shop = new Shop(name,desc,owner,uuid,key,loc);
-        pendingShops.put(key,shop);
+        if(plugin.getCustomConfig().getBoolean("moderate-directory",true))
+            pendingShops.put(key,shop);
+        else
+            shops.put(key,shop);
 
         saveShops();
     }
@@ -404,7 +407,11 @@ public class ShopRepo {
             shop.setOwner(player.getName());
             shop.setUuid(player.getUniqueId().toString());
             shop.addOwner(player.getUniqueId().toString(), player.getName());
-            pendingShops.put(shop.getKey(), shop);
+            if(plugin.getCustomConfig().getBoolean("moderate-directory",true))
+                pendingShops.put(shop.getKey(), shop);
+            else
+                shops.put(shop.getKey(),shop);
+
             waitingShops.remove(uuid);
             shopsUnderAdd.remove(uuid);
             shopsUnderEdit.remove(shop.getKey());
@@ -420,6 +427,7 @@ public class ShopRepo {
                 }
                 shopsUnderEdit.remove(shopsUnderAdd.get(uuid));
                 shopsUnderAdd.remove(uuid);
+                saveShops();
             }
         }
     }

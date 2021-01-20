@@ -131,6 +131,10 @@ public class ShopEvents implements Listener {
             meta.setDisplayName(ChatColor.GOLD + name);
             editBookEvent.setNewBookMeta(meta);
 
+            if(plugin.getCustomConfig().getBoolean("moderate-directory",true) && plugin.getCustomConfig().getBoolean("enable-custom-approval-message",false)) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getCustomConfig().getString("custom-approval-message")));
+            }
+
             if(!plugin.getCustomConfig().getBoolean("multi-owner",false))
                 plugin.getShopRepo().addShopAsOwner(name,d,editBookEvent.getPlayer().getName(),editBookEvent.getPlayer().getUniqueId().toString(),key,loc);
             else {
