@@ -1,12 +1,18 @@
 #activates moderation functionality
 moderate-directory: true
 
+#enables and sets the custom message to be sent to the player to notify moderators for shop approval
+#only works then moderate-directory is true
+enable-custom-approval-message: false
+custom-approval-message: &eBruh get your shop approved from moderators
+
 #allows multi-player ownership of shops, side effect: allows players to make shops for others, but makes them co-owners too
 multi-owner: true
 
 #allows adding offline players as owners (not recommended)
 #only works when multi-player is true
 #allow-add-offline-players: false
+#this might or might not be implemented later
 
 #enables bstats
 #It is recommended that you keep this on so that I can get a rough estimate of how my plugin is performing
