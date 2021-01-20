@@ -250,13 +250,15 @@ public class GUI {
     }
 
     public void openRefinedItemInventory(Player player, String searchKey) {
-        List<ItemStack> refinedItems = plugin.getShopRepo().findItem(searchKey);
+        Map<String,Object> searchResults = plugin.getShopRepo().findItem(searchKey);
+        List<ItemStack> refinedItems = (List<ItemStack>) searchResults.get("items");
+        List<Map<String,String>> shops = (List<Map<String,String>>) searchResults.get("shops");
         if(refinedItems.size() == 0) {
             player.sendMessage(ChatColor.RED + "No items with matching name found");
             return;
         }
 
-        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder(""),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54),"Search results");
+        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder("",6).setShops(shops),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54),"Search results");
 
         for(int i=0;i<Math.min(refinedItems.size(),54);i++) {
             refinedItemInv.setItem(i,refinedItems.get(i));

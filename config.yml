@@ -4,7 +4,7 @@ moderate-directory: true
 #enables and sets the custom message to be sent to the player to notify moderators for shop approval
 #only works then moderate-directory is true
 enable-custom-approval-message: false
-custom-approval-message: &eBruh get your shop approved from moderators
+custom-approval-message: §eBruh get your shop approved from moderators
 
 #allows multi-player ownership of shops, side effect: allows players to make shops for others, but makes them co-owners too
 multi-owner: true

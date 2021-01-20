@@ -117,7 +117,9 @@ public class ItemEvents implements Listener {
         if(itemCheckEvent.getInventory().getHolder() instanceof ShopInvHolder) {
             itemCheckEvent.setCancelled(true);
 
-            if(((ShopInvHolder) itemCheckEvent.getInventory().getHolder()).getKey().length() == 0) {
+            ShopInvHolder holder = (ShopInvHolder)itemCheckEvent.getInventory().getHolder();
+
+            if(holder.getKey().length() == 0 && holder.getType() < 6) {
                 return;
             }
 
@@ -125,7 +127,7 @@ public class ItemEvents implements Listener {
                 return;
             }
 
-            ShopInvHolder holder = (ShopInvHolder)itemCheckEvent.getInventory().getHolder();
+
             int type = holder.getType();
             Player player = ((Player) itemCheckEvent.getWhoClicked());
             if(type < 4) {
@@ -193,6 +195,9 @@ public class ItemEvents implements Listener {
 
                         plugin.gui.openItemAddMenu(player, holder.getKey(), matchingItems, itemCheckEvent.getCurrentItem());
                     }
+                } else if(type == 6 && itemCheckEvent.isRightClick() && itemCheckEvent.getRawSlot() < Math.min(itemCheckEvent.getInventory().getSize(),holder.getShops().size())) {
+                    player.closeInventory();
+                    plugin.gui.openShopInventory(player,holder.getShops().get(itemCheckEvent.getRawSlot()).get("id"),holder.getShops().get(itemCheckEvent.getRawSlot()).get("name"),0);
                 }
             }
         }

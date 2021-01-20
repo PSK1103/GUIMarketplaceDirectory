@@ -132,7 +132,7 @@ public class ShopEvents implements Listener {
             editBookEvent.setNewBookMeta(meta);
 
             if(plugin.getCustomConfig().getBoolean("moderate-directory",true) && plugin.getCustomConfig().getBoolean("enable-custom-approval-message",false)) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getCustomConfig().getString("custom-approval-message")));
+                editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getString("custom-approval-message")));
             }
 
             if(!plugin.getCustomConfig().getBoolean("multi-owner",false))
@@ -311,7 +311,7 @@ public class ShopEvents implements Listener {
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Multiple players found, be more specific");
                 } else {
                     plugin.getShopRepo().addOwner(chatEvent.getPlayer().getUniqueId().toString(), players.get(0));
-                    chatEvent.getPlayer().sendMessage(ChatColor.GOLD + "Owner added successfully");
+                    chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getDisplayName() + " successfully added as owner");
                 }
             }
             return;

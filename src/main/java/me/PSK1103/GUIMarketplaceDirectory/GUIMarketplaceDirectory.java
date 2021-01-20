@@ -95,6 +95,11 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
         return customConfig;
     }
 
+    public void reloadCustomConfig() {
+        customConfig = null;
+        getCustomConfig();
+    }
+
     public Metrics getMetrics(){
         return metrics;
     }
