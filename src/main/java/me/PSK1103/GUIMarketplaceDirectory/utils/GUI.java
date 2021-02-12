@@ -44,7 +44,13 @@ public class GUI {
         List<Map<String,String>> shops = plugin.getShopRepo().getShopDetails();
         Inventory shopDirectory = Bukkit.createInventory(new MarketplaceBookHolder(shops), Math.min(9*(shops.size()/9 + (shops.size()%9 == 0 ? 0 : 1)),54) + (shops.size() == 0 ? 9 : 0),"Marketplace Directory");
         for(int i=0;i<(shops.size() > 54 ? 45 : shops.size());i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i).get("name"));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i).get("desc")),30)));
@@ -210,7 +216,13 @@ public class GUI {
         }
         Inventory refinedShopDirectory = Bukkit.createInventory(new MarketplaceBookHolder(refinedShops),Math.min(9*(refinedShops.size()/9 + (refinedShops.size() % 9 == 0 ? 0 : 1)),54),"Search results");
         for(int i=0;i< (Math.min(refinedShops.size(), 54));i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(refinedShops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + refinedShops.get(i).get("name"));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + refinedShops.get(i).get("desc")),30)));
@@ -234,7 +246,13 @@ public class GUI {
         }
         Inventory refinedShopDirectory = Bukkit.createInventory(new MarketplaceBookHolder(refinedShops),Math.min(9*(refinedShops.size()/9 + (refinedShops.size() % 9 == 0 ? 0 : 1)),54),"Search results");
         for(int i=0;i< (Math.min(refinedShops.size(), 54));i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(refinedShops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + refinedShops.get(i).get("name"));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + refinedShops.get(i).get("desc")),30)));
@@ -271,7 +289,13 @@ public class GUI {
         List<Map<String,String>> shops = type == 1 ? plugin.getShopRepo().getPendingShopDetails() : plugin.getShopRepo().getShopDetails();
         Inventory shopDirectory = Bukkit.createInventory(new MarketplaceBookHolder(shops,type), Math.min(9*(shops.size()/9 + (shops.size()%9 == 0 ? 0 : 1)),54) + (shops.size() == 0 ? 9 : 0),"Marketplace Directory");
         for(int i=0;i<(shops.size() > 54 ? 45 : shops.size());i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i).get("name"));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i).get("desc")),30)));

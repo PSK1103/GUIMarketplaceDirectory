@@ -199,7 +199,13 @@ class ItemList {
 
         else return;
 
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
+        if(price <=0) {
+            this.price = -1;
+            lore.add(ChatColor.GRAY + "Price hidden or variable");
+        }
+        else {
+            lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
+        }
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
@@ -217,6 +223,7 @@ class Shop {
     private Map<String, String> owners;
     private String owner, uuid;
     private String key;
+    private String displayItem;
 
     private List<ItemList> inv;
 
@@ -233,6 +240,11 @@ class Shop {
         this.key = key;
         this.loc = loc;
         this.inv = new ArrayList<>();
+        this.displayItem = "WRITTEN_BOOK";
+    }
+
+    public void setDisplayItem(String displayItem) {
+        this.displayItem = displayItem;
     }
 
     public void setName(String name) {
@@ -287,6 +299,10 @@ class Shop {
         return owner;
     }
 
+    public String getDisplayItem() {
+        return displayItem;
+    }
+
     public Map<String, String> getOwners() {
         return owners;
     }
@@ -336,7 +352,12 @@ public class ShopRepo {
     }
 
     public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc) {
+        addShopAsOwner(name,desc,owner,uuid,key,loc,"WRITTEN_BOOK");
+    }
+
+    public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
+        shop.setDisplayItem(displayItem);
         if (plugin.getCustomConfig().getBoolean("moderate-directory", true))
             pendingShops.put(key, shop);
         else
@@ -346,7 +367,12 @@ public class ShopRepo {
     }
 
     public void addShop(String name, String desc, String owner, String uuid, String key, String loc) {
+        addShop(name,desc,owner,uuid,key,loc,"WRITTEN_BOOK");
+    }
+
+    public void addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
+        shop.setDisplayItem(displayItem);
         waitingShops.put(uuid, shop);
         shopsUnderEdit.put(key, 2);
         shopsUnderAdd.put(uuid, key);
@@ -429,7 +455,7 @@ public class ShopRepo {
         }
     }
 
-    private void saveShops() {
+    public void saveShops() {
         JSONParser parser = new JSONParser();
         try {
             File shopFile = plugin.getShops();
@@ -447,6 +473,7 @@ public class ShopRepo {
                 shopJSON.put("uuid", shop1.getUuid());
                 shopJSON.put("key", shop1.getKey());
                 shopJSON.put("loc", shop1.getLoc());
+                shopJSON.put("displayItem",shop1.getDisplayItem());
 
                 JSONArray items = new JSONArray();
 
@@ -481,6 +508,7 @@ public class ShopRepo {
                 shopJSON.put("uuid", shop1.getUuid());
                 shopJSON.put("key", shop1.getKey());
                 shopJSON.put("loc", shop1.getLoc());
+                shopJSON.put("displayItem",shop1.getDisplayItem());
 
                 JSONArray items = new JSONArray();
 
@@ -548,6 +576,9 @@ public class ShopRepo {
 
                             shop.setOwners(owners);
                         }
+                        if(shopJSON.containsKey("displayItem")) {
+                            shop.setDisplayItem(shopJSON.get("displayItem").toString());
+                        }
                         JSONArray itemsArray = ((JSONArray) shopJSON.get("items"));
                         for (Object o : itemsArray) {
                             try {
@@ -556,8 +587,8 @@ public class ShopRepo {
                                 if (itemJSON.get("customName") != null)
                                     item.setCustomName(itemJSON.get("customName").toString());
                                 if (itemJSON.containsKey("extraInfo") && itemJSON.containsKey("customType")) {
-                                    JSONObject headData = ((JSONObject) itemJSON.get("extraInfo"));
-                                    HashMap<String, Object> headInfo = new Gson().fromJson(headData.toString(), HashMap.class);
+                                    JSONObject extraData = ((JSONObject) itemJSON.get("extraInfo"));
+                                    HashMap<String, Object> headInfo = new Gson().fromJson(extraData.toString(), HashMap.class);
                                     item.setExtraInfo(headInfo, itemJSON.get("customType").toString());
                                 }
                                 shop.addToInv(item);
@@ -592,6 +623,9 @@ public class ShopRepo {
                                     }.getType());
 
                             shop.setOwners(owners);
+                        }
+                        if(shopJSON.containsKey("displayItem")) {
+                            shop.setDisplayItem(shopJSON.get("displayItem").toString());
                         }
                         JSONArray itemsArray = ((JSONArray) shopJSON.get("items"));
                         for (Object o : itemsArray) {
@@ -920,6 +954,7 @@ public class ShopRepo {
             details.put("desc", shop.getDesc());
             details.put("owners", String.join(", ", shop.getOwners().values()));
             details.put("loc", shop.getLoc());
+            details.put("displayItem",shop.getDisplayItem());
             details.put("key", shop.getKey());
             detailsList.add(details);
         });
@@ -970,14 +1005,19 @@ public class ShopRepo {
         ItemList item = shops.get(key).getInv().get(pos);
         String name = item.name;
         double value = 0;
-        String[] parts1 = item.qty.split(":");
-        if (Integer.parseInt(parts1[0]) > 0)
-            value = Double.parseDouble(parts1[0]) * 1728;
-        else if (Integer.parseInt(parts1[1]) > 0)
-            value = Double.parseDouble(parts1[1]) * 64;
-        else if (Integer.parseInt(parts1[2]) > 0)
-            value = Double.parseDouble(parts1[2]);
-        value /= item.price;
+        if(item.price<=0) {
+            value = Integer.MAX_VALUE;
+        }
+        else {
+            String[] parts1 = item.qty.split(":");
+            if (Integer.parseInt(parts1[0]) > 0)
+                value = Double.parseDouble(parts1[0]) * 1728;
+            else if (Integer.parseInt(parts1[1]) > 0)
+                value = Double.parseDouble(parts1[1]) * 64;
+            else if (Integer.parseInt(parts1[2]) > 0)
+                value = Double.parseDouble(parts1[2]);
+            value /= item.price;
+        }
         final boolean[] found = {false};
         double finalValue = value;
         shops.forEach((s, shop) ->
@@ -1021,6 +1061,7 @@ public class ShopRepo {
                 details.put("owners", String.join(", ", shop.getOwners().values()));
                 details.put("loc", shop.getLoc());
                 details.put("key", shop.getKey());
+                details.put("displayItem",shop.getDisplayItem());
                 detailsList.add(details);
             }
         });
@@ -1064,6 +1105,7 @@ public class ShopRepo {
                 details.put("owners", String.join(", ", shop.getOwners().values()));
                 details.put("loc", shop.getLoc());
                 details.put("key", shop.getKey());
+                details.put("displayItem",shop.getDisplayItem());
                 detailsList.add(details);
             }
         });
@@ -1093,7 +1135,6 @@ public class ShopRepo {
                     ItemStack itemToAdd = itemList.item.clone();
                     ItemMeta meta = itemToAdd.getItemMeta();
                     List<String> lore = meta.getLore();
-                    lore.remove(1);
                     lore.add(ChatColor.GREEN + "From " + shop.getName());
                     lore.add(ChatColor.YELLOW + "Right-click to view this shop");
                     meta.setLore(lore);
