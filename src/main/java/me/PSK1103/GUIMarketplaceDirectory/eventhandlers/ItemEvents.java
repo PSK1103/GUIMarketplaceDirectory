@@ -148,7 +148,7 @@ public class ItemEvents implements Listener {
             }
             else {
                 if(type == 4) {
-                    if(itemCheckEvent.getRawSlot() == 2) {
+                    if(itemCheckEvent.getRawSlot() == 1) {
                         player.closeInventory();
                         int res = plugin.getShopRepo().startAddingOwner(player.getUniqueId().toString(), holder.getKey());
                         if(res == -1)
@@ -156,7 +156,15 @@ public class ItemEvents implements Listener {
                         else
                             player.sendMessage(new String[]{ChatColor.GRAY + "Adding another owner...", ChatColor.YELLOW + "Enter player name (nil to cancel)"});
                     }
-                    else if(itemCheckEvent.getRawSlot() == 6) {
+                    else if (itemCheckEvent.getRawSlot() == 4) {
+                        player.closeInventory();
+                        int res = plugin.getShopRepo().startSettingDisplayItem(player.getUniqueId().toString(), holder.getKey());
+                        if(res == -1)
+                            player.sendMessage(ChatColor.RED + "This shop doesn't exist");
+                        else
+                            player.sendMessage(ChatColor.YELLOW + "Enter display item name (material name only, nil to cancel)");
+                    }
+                    else if(itemCheckEvent.getRawSlot() == 7) {
                         player.closeInventory();
                         int res = plugin.getShopRepo().startRemovingShop(player.getUniqueId().toString(),holder.getKey());
                         if(res == -1)

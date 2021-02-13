@@ -23,7 +23,15 @@ Write the name and description of your shop in a book in the format
 ````
 [<shop-name>]
 [<description>]
+[<display-item>](optional)
 ````
+
+Optional: The default display for shops in the directory is a written book. You can change that by including <br>
+the optional `[<display-item>]` tag in the book. Item name has to match material names in minecraft. Eg:  <br>
+Beacon: `beacon or BEACON` <br>
+Netherite Chestplate: `netherite chestplate or netherite_chestplate or NETHERITE_CHESTPLATE` <br>
+Or you can choose your custom item later. <br>
+
 Make sure to not use any more "\[" and "\]" than required. <br>
 Sign it with the title `[shop init]` or `[init shop]`. 
 
@@ -59,6 +67,11 @@ You can search the directory by either items sold, shop name, or owner's name. T
 You can remove your shop by interacting with the shop book:
 
 <img src="Captures/shop_edit.gif">
+
+#### Setting the display item
+You can add or modify your shop's custom display item with the shop book:
+
+<img src="Captures/set_display_item.gif">
 
 ### Optional Utilities
 #### Multi owner support

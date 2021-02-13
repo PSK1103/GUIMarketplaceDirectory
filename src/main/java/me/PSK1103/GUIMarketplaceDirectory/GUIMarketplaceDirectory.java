@@ -98,6 +98,7 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
 
     public void reloadCustomConfig() {
         customConfig = null;
+        gui = new GUI(this);
         getCustomConfig();
     }
 

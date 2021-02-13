@@ -129,7 +129,7 @@ public class ShopEvents implements Listener {
             String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId().toString();
             String loc = editBookEvent.getPlayer().getLocation().getBlockX() + "," + editBookEvent.getPlayer().getLocation().getBlockZ();
             meta.addPage(key);
-            meta.setDisplayName(ChatColor.GOLD + name);
+            meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
             editBookEvent.setNewBookMeta(meta);
 
             if(plugin.getCustomConfig().getBoolean("moderate-directory",true) && plugin.getCustomConfig().getBoolean("enable-custom-approval-message",false)) {
@@ -139,16 +139,19 @@ public class ShopEvents implements Listener {
             Player player = editBookEvent.getPlayer();
 
             String displayItem = data.substring(data.lastIndexOf("[") + 1, data.lastIndexOf("]")).trim();
+            displayItem = displayItem.replace(' ','_');
+            displayItem = displayItem.toUpperCase(Locale.ROOT);
+
             if(!plugin.getCustomConfig().getBoolean("multi-owner",false))
                 if(data.trim().matches("(\\[.*\\]\\s*){3}")) {
-                    plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem.toUpperCase(Locale.ROOT));
+                    plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
                 }
                 else {
                     plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc);
                 }
             else {
                 if(data.trim().matches("(\\[.*\\]\\s*){3}")) {
-                    plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem.toUpperCase(Locale.ROOT));
+                    plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
                 }
                 else {
                     plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc);
@@ -301,7 +304,9 @@ public class ShopEvents implements Listener {
                 return;
             }
 
-            if (plugin.getShopRepo().getEditType(uuid) == 2) {
+            int editType = plugin.getShopRepo().getEditType(uuid);
+
+            if (editType == 2) {
                 if (chatEvent.getMessage().equalsIgnoreCase("Y") || chatEvent.getMessage().equalsIgnoreCase("yes")) {
                     plugin.getShopRepo().addOwner(uuid, chatEvent.getPlayer());
                     chatEvent.getPlayer().sendMessage(ChatColor.GOLD + "Shop initialised successfully!");
@@ -313,7 +318,7 @@ public class ShopEvents implements Listener {
                     chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Didn't get proper response");
                     plugin.gui.sendConfirmationMessage(chatEvent.getPlayer(),"Are you the owner of this shop?");
                 }
-            } else if (plugin.getShopRepo().getEditType(uuid) == 1) {
+            } else if (editType == 1) {
 
                 if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
@@ -327,8 +332,26 @@ public class ShopEvents implements Listener {
                 } else if (players.size() > 1) {
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Multiple players found, be more specific");
                 } else {
-                    plugin.getShopRepo().addOwner(chatEvent.getPlayer().getUniqueId().toString(), players.get(0));
+                    plugin.getShopRepo().addOwner(uuid, players.get(0));
                     chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getDisplayName() + " successfully added as owner");
+                }
+            } else if(editType == 3) {
+                if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
+                    plugin.getShopRepo().stopInitOwner(uuid);
+                    chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled adding another owner");
+                    return;
+                }
+
+                String materialName = chatEvent.getMessage().trim().replace(' ','_').toUpperCase(Locale.ROOT);
+                Material trial = Material.getMaterial(materialName);
+                if(trial != null) {
+                    chatEvent.getPlayer().sendMessage(ChatColor.GREEN + "Setting shop display item to " + ChatColor.GOLD + trial.getKey().getKey());
+                    plugin.getShopRepo().setDisplayItem(uuid,materialName);
+                }
+                else {
+                    chatEvent.getPlayer().sendMessage(ChatColor.RED + "Item name doesn't match to a proper material name. Try again");
+                    chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Enter display item name (material name only, nil to cancel)");
+                    return;
                 }
             }
             return;

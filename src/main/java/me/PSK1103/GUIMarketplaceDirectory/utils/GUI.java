@@ -18,16 +18,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.ChatPaginator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GUI {
     private final GUIMarketplaceDirectory plugin;
+    private final HashMap<String,String> colors;
 
     public GUI(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
+        colors = new HashMap<>();
+        colors.put("name",plugin.getCustomConfig().getString("default-shop-name-color","§6§l"));
+        colors.put("desc",plugin.getCustomConfig().getString("default-shop-desc-color","§1"));
+        colors.put("owner",plugin.getCustomConfig().getString("default-shop-owner-color","§d"));
+        colors.put("loc",plugin.getCustomConfig().getString("default-shop-loc-color","§e"));
     }
 
     public void sendConfirmationMessage(Player player, String msg) {
@@ -52,10 +55,10 @@ public class GUI {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + shops.get(i).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + shops.get(i).get("owners"));
+            shopMeta.setDisplayName(shops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + shops.get(i).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + shops.get(i).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + shops.get(i).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + shops.get(i).get("owners")));
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             shopItem.setItemMeta(shopMeta);
@@ -119,10 +122,10 @@ public class GUI {
         for(int i=0;i<Math.min(shops.size(),(currPage+1)*45)-currPage*45;i++) {
             ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i+currPage*45).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i+currPage*45).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + shops.get(i+currPage*45).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + shops.get(i+currPage*45).get("owners"));
+            shopMeta.setDisplayName(shops.get(i+currPage*45).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") +  shops.get(i+currPage*45).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i+currPage*45).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") +  shops.get(i+currPage*45).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") +  shops.get(i+currPage*45).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") +  shops.get(i+currPage*45).get("owners")));
             if(type == 1) {
                 lore.add(ChatColor.GREEN + "Right click to approve");
                 lore.add(ChatColor.RED + "Left click to reject");
@@ -168,10 +171,10 @@ public class GUI {
         for(int i=0;i < 45;i++) {
             ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i+currPage*45).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i+currPage*45).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + shops.get(i+currPage*45).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + shops.get(i+currPage*45).get("owners"));
+            shopMeta.setDisplayName(shops.get(i+currPage*45).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") +  shops.get(i+currPage*45).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i+currPage*45).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") +  shops.get(i+currPage*45).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") +  shops.get(i+currPage*45).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") +  shops.get(i+currPage*45).get("owners")));
             if(type == 1) {
                 lore.add(ChatColor.GREEN + "Right click to approve");
                 lore.add(ChatColor.RED + "Left click to reject");
@@ -224,10 +227,10 @@ public class GUI {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + refinedShops.get(i).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + refinedShops.get(i).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + refinedShops.get(i).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + refinedShops.get(i).get("owners"));
+            shopMeta.setDisplayName(refinedShops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',refinedShops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + refinedShops.get(i).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(refinedShops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',refinedShops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + refinedShops.get(i).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + refinedShops.get(i).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + refinedShops.get(i).get("owners")));
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             shopItem.setItemMeta(shopMeta);
@@ -254,10 +257,10 @@ public class GUI {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + refinedShops.get(i).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + refinedShops.get(i).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + refinedShops.get(i).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + refinedShops.get(i).get("owners"));
+            shopMeta.setDisplayName(refinedShops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',refinedShops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + refinedShops.get(i).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(refinedShops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',refinedShops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + refinedShops.get(i).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + refinedShops.get(i).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + refinedShops.get(i).get("owners")));
             shopMeta.setLore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             shopItem.setItemMeta(shopMeta);
@@ -297,10 +300,10 @@ public class GUI {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
-            shopMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + shops.get(i).get("name"));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(ChatColor.translateAlternateColorCodes('&',"&1" + shops.get(i).get("desc")),30)));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&e" + shops.get(i).get("loc")));
-            lore.add(0,ChatColor.LIGHT_PURPLE + shops.get(i).get("owners"));
+            shopMeta.setDisplayName(shops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + shops.get(i).get("name")));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + shops.get(i).get("desc")),30)));
+            lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + shops.get(i).get("loc")));
+            lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + shops.get(i).get("owners")));
             if(type == 1) {
                 lore.add(ChatColor.AQUA + "Shift click to view");
                 lore.add(ChatColor.GREEN + "Right click to approve");
@@ -352,13 +355,19 @@ public class GUI {
         ItemMeta addOwnerMeta = addOwner.getItemMeta();
         addOwnerMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + "Add owner");
         addOwner.setItemMeta(addOwnerMeta);
-        shopEditMenuInv.setItem(2,addOwner);
+        shopEditMenuInv.setItem(1,addOwner);
+
+        ItemStack setDisplayItem = new ItemStack(Material.WRITABLE_BOOK);
+        ItemMeta setDisplayItemMeta = addOwner.getItemMeta();
+        setDisplayItemMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + "Set display item");
+        setDisplayItem.setItemMeta(setDisplayItemMeta);
+        shopEditMenuInv.setItem(4,setDisplayItem);
 
         ItemStack removeShop = new ItemStack(Material.FLINT_AND_STEEL);
         ItemMeta removeShopMeta = removeShop.getItemMeta();
         removeShopMeta.setDisplayName(ChatColor.RED + "" + ChatColor.ITALIC + "delete shop");
         removeShop.setItemMeta(removeShopMeta);
-        shopEditMenuInv.setItem(6,removeShop);
+        shopEditMenuInv.setItem(7,removeShop);
 
         player.openInventory(shopEditMenuInv);
     }

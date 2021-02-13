@@ -404,6 +404,16 @@ public class ShopRepo {
         return 1;
     }
 
+    public int startSettingDisplayItem(String uuid, String key) {
+        if (shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
+            return 0;
+        if (!shops.containsKey(key) && !pendingShops.containsKey(key))
+            return -1;
+        shopsUnderAdd.put(uuid, key);
+        shopsUnderEdit.put(key, 3);
+        return 1;
+    }
+
     public int startRemovingShop(String uuid, String key) {
         if (shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
             return 0;
@@ -452,6 +462,19 @@ public class ShopRepo {
                 shopsUnderAdd.remove(uuid);
                 saveShops();
             }
+        }
+    }
+
+    public void setDisplayItem(String uuid, String materialName) {
+        if (shopsUnderAdd.containsKey(uuid)) {
+            if (pendingShops.containsKey(shopsUnderAdd.get(uuid))) {
+                pendingShops.get(shopsUnderAdd.get(uuid)).setDisplayItem(materialName);
+            } else if (shops.containsKey(shopsUnderAdd.get(uuid))) {
+                shops.get(shopsUnderAdd.get(uuid)).setDisplayItem(materialName);
+            }
+            shopsUnderEdit.remove(shopsUnderAdd.get(uuid));
+            shopsUnderAdd.remove(uuid);
+            saveShops();
         }
     }
 
@@ -970,6 +993,7 @@ public class ShopRepo {
             details.put("owners", String.join(", ", shop.getOwners().values()));
             details.put("loc", shop.getLoc());
             details.put("key", shop.getKey());
+            details.put("displayItem",shop.getDisplayItem());
             detailsList.add(details);
         });
         return detailsList;

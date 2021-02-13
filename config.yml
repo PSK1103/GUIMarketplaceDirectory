@@ -1,3 +1,10 @@
+#custom colors for shop details [description,location,owner name]
+# should be in the format §[0-9a-fk-or]
+default-shop-name-color: §6§l
+default-shop-desc-color: §1
+default-shop-owner-color: §d
+default-shop-loc-color: §e
+
 #activates moderation functionality
 moderate-directory: true
 
