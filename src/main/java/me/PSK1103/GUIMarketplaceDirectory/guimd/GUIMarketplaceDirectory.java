@@ -1,9 +1,10 @@
-package me.PSK1103.GUIMarketplaceDirectory;
+package me.PSK1103.GUIMarketplaceDirectory.guimd;
 
 import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ItemEvents;
 import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ShopEvents;
+import me.PSK1103.GUIMarketplaceDirectory.utils.Config;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
-import me.PSK1103.GUIMarketplaceDirectory.utils.GUIMarketplaceCommands;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceCommands;
 import me.PSK1103.GUIMarketplaceDirectory.utils.Metrics;
 import me.PSK1103.GUIMarketplaceDirectory.utils.ShopRepo;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -12,6 +13,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -20,18 +22,22 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
 
     File shops = null;
     private ShopRepo shopRepo;
+    private Config config;
     public GUI gui;
     private File customConfigFile;
     private FileConfiguration customConfig;
     private Metrics metrics;
+    private Logger logger;
 
     private static final int pluginId = 9879;
 
     @Override
     public void onEnable() {
+        logger = getSLF4JLogger();
         customConfig = null;
         saveDefaultConfig();
-        if(getCustomConfig().getBoolean("enable-bstats",true))
+        config = new Config(this);
+        if(config.bstatsEnabled())
             metrics = new Metrics(this, pluginId);
         this.shopRepo = new ShopRepo(this);
         this.gui = new GUI(this);
@@ -67,6 +73,7 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
 
             }
             catch (IOException e) {
+                logger.error("Unable to initialise shops", e);
                 e.printStackTrace();
             }
         }
@@ -77,33 +84,12 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
         return shopRepo;
     }
 
-    public FileConfiguration getCustomConfig() {
-
-        if(customConfig!=null)
-            return customConfig;
-
-        customConfigFile = new File(getDataFolder(), "config.yml");
-        if (!customConfigFile.exists()) {
-            return getConfig();
-        }
-        customConfig= new YamlConfiguration();
-        try {
-            customConfig.load(customConfigFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-
-        return customConfig;
-    }
-
-    public void reloadCustomConfig() {
-        customConfig = null;
-        gui = new GUI(this);
-        getCustomConfig();
-    }
-
     public Metrics getMetrics(){
         return metrics;
+    }
+
+    public Config getCustomConfig() {
+        return config;
     }
 
 }

@@ -1,8 +1,8 @@
-main: me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory
+main: me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory
 name: GUIMarketplaceDirectory
 author: PSK1103
 api-version: "1.14"
-version: 1.0.2
+version: 1.0.3
 description: gui marketplace directory
 
 commands:
@@ -16,3 +16,9 @@ permissions:
   GUIMD.moderate:
     default: op
     description: Allows moderation of shops
+    children:
+      GUIMD.dir: true
+
+  GUIMD.dir:
+    description: Allows user to use the /guimd dir command to get the Marketplace Directory book
+    default: op

@@ -1,7 +1,7 @@
 package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 
 import io.netty.channel.*;
-import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
 import net.minecraft.server.v1_16_R3.PacketPlayOutOpenBook;
 import org.bukkit.Bukkit;
@@ -22,6 +22,8 @@ import org.bukkit.inventory.meta.BookMeta;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ShopEvents implements Listener {
 
@@ -50,7 +52,7 @@ public class ShopEvents implements Listener {
                                 Bukkit.getScheduler().runTask(plugin,()-> ShopEvents.this.plugin.gui.openShopDirectory(player));
                             }
                             else if (bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]")) {
-                                if (!ShopEvents.this.plugin.getCustomConfig().getBoolean("multi-owner", false)) {
+                                if (!ShopEvents.this.plugin.getCustomConfig().multiOwnerEnabled()) {
                                     return;                                }
                                 if (ShopEvents.this.plugin.getShopRepo().isShopOwner(player.getUniqueId().toString(), bookMeta.getPage(bookMeta.getPageCount()))) {
                                     if (ShopEvents.this.plugin.getShopRepo().isAddingItem(player.getUniqueId().toString())) {
@@ -111,8 +113,10 @@ public class ShopEvents implements Listener {
             for(int i = 0;i<meta.getPageCount();i++) {
                 desc.append(meta.getPage(i+1));
             }
-            String data = desc.toString();
-            if(!data.trim().matches("(\\[.*\\]\\s*){2,3}")) {
+            String data = desc.toString().trim();
+            Pattern shopInitPattern = Pattern.compile("\\[([^\\[]*)\\]\\s*\\[([^\\[]*)\\](?:\\s*\\[([^\\[]*)\\])?");
+            Matcher shopInitMatcher = shopInitPattern.matcher(data);
+            if(!shopInitMatcher.matches()) {
                 editBookEvent.getPlayer().sendMessage(ChatColor.RED + "Incorrect shop initialisation, try again");
                 editBookEvent.setCancelled(true);
                 return;
@@ -124,38 +128,32 @@ public class ShopEvents implements Listener {
                 return;
             }
 
-            String name = data.substring(data.indexOf("[")+1,data.indexOf("]")).trim();
-            String d = data.substring(data.indexOf("[",data.indexOf("["+2))+1,data.indexOf("]",data.indexOf("]"+ 2))).trim();
+            String name = "", d = "", displayItem;
+
+            displayItem = "WRITTEN_BOOK";
+
+            name = shopInitMatcher.group(1);
+            d = shopInitMatcher.group(2);
+
+            if(shopInitMatcher.group(3) != null)
+                displayItem = shopInitMatcher.group(3);
+
             String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId().toString();
             String loc = editBookEvent.getPlayer().getLocation().getBlockX() + "," + editBookEvent.getPlayer().getLocation().getBlockZ();
             meta.addPage(key);
             meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
             editBookEvent.setNewBookMeta(meta);
 
-            if(plugin.getCustomConfig().getBoolean("moderate-directory",true) && plugin.getCustomConfig().getBoolean("enable-custom-approval-message",false)) {
-                editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getString("custom-approval-message")));
+            if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
+                editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
             }
 
             Player player = editBookEvent.getPlayer();
 
-            String displayItem = data.substring(data.lastIndexOf("[") + 1, data.lastIndexOf("]")).trim();
-            displayItem = displayItem.replace(' ','_');
-            displayItem = displayItem.toUpperCase(Locale.ROOT);
-
-            if(!plugin.getCustomConfig().getBoolean("multi-owner",false))
-                if(data.trim().matches("(\\[.*\\]\\s*){3}")) {
-                    plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
-                }
-                else {
-                    plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc);
-                }
+            if(!plugin.getCustomConfig().multiOwnerEnabled())
+                plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
             else {
-                if(data.trim().matches("(\\[.*\\]\\s*){3}")) {
-                    plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
-                }
-                else {
-                    plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc);
-                }
+                plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
                 plugin.gui.sendConfirmationMessage(player,"Are you the owner of " + name + " ?");
                 return;
             }
@@ -191,7 +189,7 @@ public class ShopEvents implements Listener {
             MarketplaceBookHolder holder = ((MarketplaceBookHolder) shopSelectEvent.getInventory().getHolder());
             shopSelectEvent.setCancelled(true);
 
-            if(shopSelectEvent.getRawSlot() > shopSelectEvent.getInventory().getSize()) {
+            if(shopSelectEvent.getRawSlot() > shopSelectEvent.getInventory().getSize() || shopSelectEvent.getRawSlot() < 0) {
                 shopSelectEvent.setCancelled(true);
                 return;
             }
@@ -338,7 +336,7 @@ public class ShopEvents implements Listener {
             } else if(editType == 3) {
                 if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
-                    chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled adding another owner");
+                    chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled setting display item");
                     return;
                 }
 

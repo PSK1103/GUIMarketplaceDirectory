@@ -1,7 +1,7 @@
 package me.PSK1103.GUIMarketplaceDirectory.utils;
 
 
-import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.ShopInvHolder;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -17,20 +17,23 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.ChatPaginator;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public class GUI {
     private final GUIMarketplaceDirectory plugin;
     private final HashMap<String,String> colors;
+    private final Logger logger;
 
     public GUI(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
+        logger = plugin.getSLF4JLogger();
         colors = new HashMap<>();
-        colors.put("name",plugin.getCustomConfig().getString("default-shop-name-color","§6§l"));
-        colors.put("desc",plugin.getCustomConfig().getString("default-shop-desc-color","§1"));
-        colors.put("owner",plugin.getCustomConfig().getString("default-shop-owner-color","§d"));
-        colors.put("loc",plugin.getCustomConfig().getString("default-shop-loc-color","§e"));
+        colors.put("name",plugin.getCustomConfig().getDefaultShopNameColor());
+        colors.put("desc",plugin.getCustomConfig().getDefaultShopDescColor());
+        colors.put("owner",plugin.getCustomConfig().getDefaultShopOwnerColor());
+        colors.put("loc",plugin.getCustomConfig().getDefaultShopLocColor());
     }
 
     public void sendConfirmationMessage(Player player, String msg) {
@@ -301,7 +304,7 @@ public class GUI {
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(shops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + shops.get(i).get("name")));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + shops.get(i).get("desc")),30)));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("desc")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + shops.get(i).get("desc")),30)));
             lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + shops.get(i).get("loc")));
             lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + shops.get(i).get("owners")));
             if(type == 1) {
@@ -342,7 +345,7 @@ public class GUI {
         }
 
         if(shops.size() == 0) {
-            System.out.println("No pending shop");
+            logger.info("No pending shop");
         }
 
         moderator.openInventory(shopDirectory);
@@ -358,7 +361,7 @@ public class GUI {
         shopEditMenuInv.setItem(1,addOwner);
 
         ItemStack setDisplayItem = new ItemStack(Material.WRITABLE_BOOK);
-        ItemMeta setDisplayItemMeta = addOwner.getItemMeta();
+        ItemMeta setDisplayItemMeta = setDisplayItem.getItemMeta();
         setDisplayItemMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + "Set display item");
         setDisplayItem.setItemMeta(setDisplayItemMeta);
         shopEditMenuInv.setItem(4,setDisplayItem);

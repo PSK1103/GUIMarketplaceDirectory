@@ -1,6 +1,6 @@
 package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 
-import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.ShopInvHolder;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -35,8 +35,10 @@ public class ItemEvents implements Listener {
             }
 
             ItemStack item = itemEvent.getCurrentItem();
+            if(item == null || item.getType().isAir()) {
+                return;
+            }
             String name = item.getType().getKey().getKey().toUpperCase();
-            System.out.println(name);
             Player player = ((Player) itemEvent.getWhoClicked());
             Inventory inventory = itemEvent.getInventory();
             if(player.getInventory().firstEmpty() !=-1) {
@@ -73,6 +75,11 @@ public class ItemEvents implements Listener {
             }
 
             List<ItemStack> matchingItems = plugin.getShopRepo().getMatchingItems(bookMeta.getPage(bookMeta.getPageCount()),item.getType().getKey().getKey().toUpperCase());
+
+            if(matchingItems == null) {
+                player.sendMessage(ChatColor.RED + "Shop doesn't exist");
+                return;
+            }
 
             if(matchingItems.size() == 0) {
                 player.sendMessage(ChatColor.GREEN + "Set quantity (in format shulker:stack:num)");

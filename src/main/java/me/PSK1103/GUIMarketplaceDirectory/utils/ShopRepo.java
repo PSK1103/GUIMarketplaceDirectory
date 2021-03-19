@@ -8,7 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
-import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import org.bukkit.*;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.banner.Pattern;
@@ -23,6 +23,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -331,6 +332,8 @@ public class ShopRepo {
     private final HashMap<String, String> shopsUnderReject;
     private final HashMap<String, String> shopsUnderRemove;
 
+    private final Logger logger;
+
     public ShopRepo(GUIMarketplaceDirectory plugin) {
         this.shops = new HashMap<>();
         this.pendingShops = new HashMap<>();
@@ -341,24 +344,24 @@ public class ShopRepo {
         waitingShops = new HashMap<>();
         itemToAdd = new HashMap<>();
         this.plugin = plugin;
+        this.logger = plugin.getSLF4JLogger();
         if (initShops()) {
-            plugin.getLogger().info("Shops loaded");
-            if (plugin.getCustomConfig().getBoolean("enable-bstats", true))
+            logger.info("Shops loaded");
+            if (plugin.getCustomConfig().bstatsEnabled())
                 addShopCountMetric();
         } else {
-            plugin.getLogger().severe("Error while loading shops, disabling GUIMD");
+            logger.error("Error while loading shops, disabling GUIMD");
             Bukkit.getPluginManager().disablePlugin(plugin);
         }
     }
 
-    public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc) {
-        addShopAsOwner(name,desc,owner,uuid,key,loc,"WRITTEN_BOOK");
-    }
-
     public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
-        shop.setDisplayItem(displayItem);
-        if (plugin.getCustomConfig().getBoolean("moderate-directory", true))
+        Material material = Material.matchMaterial(displayItem);
+        if(material != null)
+            shop.setDisplayItem(displayItem);
+        else shop.setDisplayItem("WRITTEN_BOOK");
+        if (plugin.getCustomConfig().directoryModerationEnabled())
             pendingShops.put(key, shop);
         else
             shops.put(key, shop);
@@ -366,13 +369,12 @@ public class ShopRepo {
         saveShops();
     }
 
-    public void addShop(String name, String desc, String owner, String uuid, String key, String loc) {
-        addShop(name,desc,owner,uuid,key,loc,"WRITTEN_BOOK");
-    }
-
     public void addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
-        shop.setDisplayItem(displayItem);
+        Material material = Material.matchMaterial(displayItem);
+        if(material != null)
+            shop.setDisplayItem(displayItem);
+        else shop.setDisplayItem("WRITTEN_BOOK");
         waitingShops.put(uuid, shop);
         shopsUnderEdit.put(key, 2);
         shopsUnderAdd.put(uuid, key);
@@ -442,7 +444,7 @@ public class ShopRepo {
             shop.setOwner(player.getName());
             shop.setUuid(player.getUniqueId().toString());
             shop.addOwner(player.getUniqueId().toString(), player.getName());
-            if (plugin.getCustomConfig().getBoolean("moderate-directory", true))
+            if (plugin.getCustomConfig().directoryModerationEnabled())
                 pendingShops.put(shop.getKey(), shop);
             else
                 shops.put(shop.getKey(), shop);
@@ -617,23 +619,23 @@ public class ShopRepo {
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
-                                    plugin.getLogger().severe("Malformed shops.json, cannot add item");
+                                    logger.error("Malformed shops.json, cannot add item");
                                 if (e instanceof NullPointerException)
-                                    plugin.getLogger().warning("Key value(s) missing, item won't be created");
+                                    logger.warn("Key value(s) missing, item won't be created");
                                 e.printStackTrace();
                             }
                         }
                         shops.put(shopJSON.get("key").toString(), shop);
                     } catch (ClassCastException | NullPointerException e) {
                         if (e instanceof ClassCastException)
-                            plugin.getLogger().severe("Malformed shops.json, cannot add shop");
+                            logger.error("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
-                            plugin.getLogger().warning("Key value(s) missing, shop won't be created");
+                            logger.warn("Key value(s) missing, shop won't be created");
                         e.printStackTrace();
                     }
                 }
             } else
-                plugin.getLogger().warning("No shops in directory");
+                logger.warn("No shops in directory");
 
             if (pShopJSONs.size() > 0) {
                 for (Object json : pShopJSONs) {
@@ -665,18 +667,18 @@ public class ShopRepo {
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
-                                    plugin.getLogger().severe("Malformed shops.json, cannot add item");
+                                    logger.error("Malformed shops.json, cannot add item");
                                 if (e instanceof NullPointerException)
-                                    plugin.getLogger().warning("Key value(s) missing, item won't be created");
+                                    logger.warn("Key value(s) missing, item won't be created");
                                 e.printStackTrace();
                             }
                         }
                         pendingShops.put(shopJSON.get("key").toString(), shop);
                     } catch (ClassCastException | NullPointerException e) {
                         if (e instanceof ClassCastException)
-                            plugin.getLogger().severe("Malformed shops.json, cannot add shop");
+                            logger.warn("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
-                            plugin.getLogger().warning("Key value(s) missing, shop won't be created");
+                            logger.warn("Key value(s) missing, shop won't be created");
                         e.printStackTrace();
                     }
                 }
@@ -1093,7 +1095,9 @@ public class ShopRepo {
     }
 
     public List<ItemStack> getMatchingItems(String key, String itemName) {
-        Shop shop = shops.get(key);
+        Shop shop = shops.getOrDefault(key, pendingShops.get(key));
+        if(shop == null)
+            return null;
         List<ItemStack> items = new ArrayList<>();
         shop.getInv().forEach(itemList -> {
             if (itemList.name.equalsIgnoreCase(itemName))
@@ -1103,12 +1107,12 @@ public class ShopRepo {
     }
 
     public void removeMatchingItems(String key, String itemName) {
-        Shop shop = shops.get(key);
+        Shop shop = shops.getOrDefault(key, pendingShops.get(key));
         shop.setInv(shop.getInv().stream().filter(itemList -> !itemList.name.equals(itemName)).collect(Collectors.toList()));
     }
 
     public void removeItem(String key, ItemStack item) {
-        Shop shop = shops.get(key);
+        Shop shop = shops.getOrDefault(key, pendingShops.get(key));
         shop.setInv(shop.getInv().stream().filter(itemList -> itemList.getItem().getType() != item.getType() || !item.getItemMeta().getLore().get(0).equals(itemList.item.getItemMeta().getLore().get(0))).collect(Collectors.toList()));
     }
 

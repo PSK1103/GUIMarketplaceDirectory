@@ -1,6 +1,6 @@
-package me.PSK1103.GUIMarketplaceDirectory.utils;
+package me.PSK1103.GUIMarketplaceDirectory.guimd;
 
-import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -10,6 +10,7 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +18,11 @@ import java.util.List;
 public class GUIMarketplaceCommands implements TabExecutor {
 
     final GUIMarketplaceDirectory plugin;
+    final Logger logger;
 
     public GUIMarketplaceCommands(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
+        this.logger = plugin.getSLF4JLogger();
     }
 
     @Override
@@ -70,7 +73,7 @@ public class GUIMarketplaceCommands implements TabExecutor {
                             commandSender.sendMessage(ChatColor.RED + "You do not have permissions to use this command");
                             return true;
                         }
-                        if (!plugin.getCustomConfig().getBoolean("moderate-directory", false)) {
+                        if (!plugin.getCustomConfig().directoryModerationEnabled()) {
                             commandSender.sendMessage(ChatColor.RED + "This feature is not enabled! Enable it from the config");
                             return true;
                         }
@@ -96,10 +99,13 @@ public class GUIMarketplaceCommands implements TabExecutor {
                     case "help":
                         commandSender.sendMessage(ChatColor.LIGHT_PURPLE + "=============GUIMarketplaceDirectory v" + plugin.getDescription().getVersion() + "=============");
                         commandSender.sendMessage(ChatColor.GOLD + "/guimd search [item/player/shop] (key): " + ChatColor.GREEN + "Search for items via item name or shops via shop name/player name");
+                        if(commandSender.hasPermission("GUIMD.dir")) {
+                            commandSender.sendMessage(ChatColor.GOLD + "/guimd dir: " + ChatColor.GREEN + "Gives you a copy of the Marketplace Directory book");
+                        }
                         if(commandSender.hasPermission("GUIMD.moderate")) {
-                            commandSender.sendMessage(ChatColor.GOLD + "/guimd  moderate pending: " + ChatColor.GREEN + "Shows shops requiring approval");
-                            commandSender.sendMessage(ChatColor.GOLD + "/guimd  moderate review: " + ChatColor.GREEN + "Shows active shops for removal if deemed objectionable");
-                            commandSender.sendMessage(ChatColor.GOLD + "/guimd  moderate recover: " + ChatColor.GREEN + "Shows active shops for recovering a copy of the [shop init] book if the owner loses their copy");
+                            commandSender.sendMessage(ChatColor.GOLD + "/guimd moderate pending: " + ChatColor.GREEN + "Shows shops requiring approval");
+                            commandSender.sendMessage(ChatColor.GOLD + "/guimd moderate review: " + ChatColor.GREEN + "Shows active shops for removal if deemed objectionable");
+                            commandSender.sendMessage(ChatColor.GOLD + "/guimd moderate recover: " + ChatColor.GREEN + "Shows active shops for recovering a copy of the [shop init] book if the owner loses their copy");
                             commandSender.sendMessage(ChatColor.GOLD + "/guimd reload: " + ChatColor.GREEN + "Refreshes the plugin");
                         }
                         return true;
@@ -110,16 +116,28 @@ public class GUIMarketplaceCommands implements TabExecutor {
                             commandSender.sendMessage(ChatColor.RED + "You do not have permissions to reload the marketplace directory config");
                             return true;
                         }
-                        plugin.reloadCustomConfig();
+                        plugin.getCustomConfig().reloadConfig();
+                        plugin.gui = new GUI(plugin);
                         return true;
                     case "dir":
                     case "d":
                         if(commandSender instanceof Player) {
                             Player player = (Player) commandSender;
+
+                            if(!commandSender.hasPermission("GUIMD.dir")) {
+                                player.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
+                                return true;
+                            }
                             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "give " + player.getDisplayName() + " written_book{display:{Name:'{\"text\":\"Marketplace Directory\",\"color\":\"gold\",\"bold\":false,\"italic\":false,\"underlined\":false,\"strikethrough\":false,\"obfuscated\":false}'},title:\"[Marketplace]\",author:\"PSK1103\"} 1");
                             return true;
                         }
                         commandSender.sendMessage("Use this command as player");
+                        return true;
+                    case "config":
+                    case "c":
+                        if(commandSender instanceof ConsoleCommandSender)
+                            logger.info(plugin.getCustomConfig().toString());
+                        return true;
                 }
             }
         }
