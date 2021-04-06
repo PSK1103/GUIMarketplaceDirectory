@@ -2,7 +2,7 @@ main: me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory
 name: GUIMarketplaceDirectory
 author: PSK1103
 api-version: "1.14"
-version: 1.0.3
+version: 1.0.4
 description: gui marketplace directory
 
 commands:
