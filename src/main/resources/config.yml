@@ -5,6 +5,10 @@ default-shop-desc-color: §1
 default-shop-owner-color: §d
 default-shop-loc-color: §e
 
+#sets a character limit for shop name + description
+#set to -1 for no limit
+shop-details-length-limit: -1
+
 #activates moderation functionality
 moderate-directory: true
 

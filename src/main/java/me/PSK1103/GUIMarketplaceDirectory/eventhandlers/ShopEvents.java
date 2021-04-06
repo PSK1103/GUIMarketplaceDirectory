@@ -138,6 +138,13 @@ public class ShopEvents implements Listener {
             if(shopInitMatcher.group(3) != null)
                 displayItem = shopInitMatcher.group(3);
 
+            if(plugin.getCustomConfig().getShopDetailsLengthLimit() > 0 && (name.length() + d.length()) > plugin.getCustomConfig().getShopDetailsLengthLimit()) {
+                editBookEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Shop name + description length is too long (limit " +
+                        plugin.getCustomConfig().getShopDetailsLengthLimit() + " characters)");
+                editBookEvent.setCancelled(true);
+                return;
+            }
+
             String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId().toString();
             String loc = editBookEvent.getPlayer().getLocation().getBlockX() + "," + editBookEvent.getPlayer().getLocation().getBlockZ();
             meta.addPage(key);

@@ -22,6 +22,8 @@ public class Config {
 
     private boolean moderateDirectory;
 
+    private int shopDetailsLengthLimit;
+
     private boolean multiOwner;
 
     private boolean enableCustomApprovalMessage;
@@ -57,6 +59,8 @@ public class Config {
 
             moderateDirectory = configFile.getBoolean("moderate-directory",defaultConfig.getBoolean("moderate-directory"));
 
+            shopDetailsLengthLimit = configFile.getInt("shop-details-length-limit",defaultConfig.getInt("shop-details-length-limit",-1));
+
             multiOwner = configFile.getBoolean("multi-owner",defaultConfig.getBoolean("multi-owner"));
 
             enableCustomApprovalMessage = configFile.getBoolean("enable-custom-approval-message",defaultConfig.getBoolean("enable-custom-approval-message"));
@@ -73,21 +77,32 @@ public class Config {
 
     private void loadDefaultConfig() {
         logger.info("Loading default config");
-        final FileConfiguration defaultConfig = plugin.getConfig();
+        final FileConfiguration defaultConfig = new YamlConfiguration();
 
-        defaultShopNameColor = defaultConfig.getString("default-shop-name-color");
-        defaultShopDescColor = defaultConfig.getString("default-shop-desc-color");
-        defaultShopOwnerColor = defaultConfig.getString("default-shop-owner-color");
-        defaultShopLocColor = defaultConfig.getString("default-shop-loc-color");
+        try {
+            defaultConfig.load(new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("config.yml"))));
 
-        moderateDirectory = defaultConfig.getBoolean("moderate-directory");
+            defaultShopNameColor = defaultConfig.getString("default-shop-name-color");
+            defaultShopDescColor = defaultConfig.getString("default-shop-desc-color");
+            defaultShopOwnerColor = defaultConfig.getString("default-shop-owner-color");
+            defaultShopLocColor = defaultConfig.getString("default-shop-loc-color");
 
-        multiOwner = defaultConfig.getBoolean("multi-owner");
+            moderateDirectory = defaultConfig.getBoolean("moderate-directory");
 
-        enableCustomApprovalMessage = defaultConfig.getBoolean("enable-custom-approval-message");
-        customApprovalMessage = defaultConfig.getString("custom-approval-message");
+            shopDetailsLengthLimit = defaultConfig.getInt("shop-details-length-limit",-1);
 
-        enableBstats = defaultConfig.getBoolean("enable-bstats");
+            multiOwner = defaultConfig.getBoolean("multi-owner");
+
+            enableCustomApprovalMessage = defaultConfig.getBoolean("enable-custom-approval-message");
+            customApprovalMessage = defaultConfig.getString("custom-approval-message");
+
+            enableBstats = defaultConfig.getBoolean("enable-bstats");
+
+        } catch (IOException | InvalidConfigurationException e) {
+            logger.error("Failed to parse custom config");
+            logger.warn("Reverting to default config");
+            loadDefaultConfig();
+        }
 
     }
 
@@ -176,6 +191,10 @@ public class Config {
 
     public boolean directoryModerationEnabled() {
         return moderateDirectory;
+    }
+
+    public int getShopDetailsLengthLimit() {
+        return shopDetailsLengthLimit;
     }
 
     public boolean multiOwnerEnabled() {

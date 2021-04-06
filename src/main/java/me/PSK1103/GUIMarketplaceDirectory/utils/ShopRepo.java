@@ -481,101 +481,103 @@ public class ShopRepo {
     }
 
     public void saveShops() {
-        JSONParser parser = new JSONParser();
-        try {
-            File shopFile = plugin.getShops();
-            assert shopFile != null;
-            parser.parse(new FileReader(shopFile));
-            JSONObject data = new JSONObject();
-            JSONArray shopJSONs = new JSONArray();
-            JSONArray pShopJSONs = new JSONArray();
-            shops.forEach((s, shop1) -> {
-                JSONObject shopJSON = new JSONObject();
-                shopJSON.put("name", shop1.getName());
-                shopJSON.put("desc", shop1.getDesc());
-                shopJSON.put("owner", shop1.getOwner());
-                shopJSON.put("owners", shop1.getOwners());
-                shopJSON.put("uuid", shop1.getUuid());
-                shopJSON.put("key", shop1.getKey());
-                shopJSON.put("loc", shop1.getLoc());
-                shopJSON.put("displayItem",shop1.getDisplayItem());
+        Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
+            JSONParser parser = new JSONParser();
+            try {
+                File shopFile = plugin.getShops();
+                assert shopFile != null;
+                parser.parse(new FileReader(shopFile));
+                JSONObject data = new JSONObject();
+                JSONArray shopJSONs = new JSONArray();
+                JSONArray pShopJSONs = new JSONArray();
+                shops.forEach((s, shop1) -> {
+                    JSONObject shopJSON = new JSONObject();
+                    shopJSON.put("name", shop1.getName());
+                    shopJSON.put("desc", shop1.getDesc());
+                    shopJSON.put("owner", shop1.getOwner());
+                    shopJSON.put("owners", shop1.getOwners());
+                    shopJSON.put("uuid", shop1.getUuid());
+                    shopJSON.put("key", shop1.getKey());
+                    shopJSON.put("loc", shop1.getLoc());
+                    shopJSON.put("displayItem",shop1.getDisplayItem());
 
-                JSONArray items = new JSONArray();
+                    JSONArray items = new JSONArray();
 
-                shop1.getInv().forEach(itemList -> {
-                    JSONObject item = new JSONObject();
-                    item.put("name", itemList.item.getType().getKey().getKey().toUpperCase());
-                    item.put("price", Integer.valueOf(itemList.price).toString());
-                    item.put("qty", itemList.qty);
-                    if (itemList.item.getItemMeta().hasDisplayName())
-                        item.put("customName", itemList.item.getItemMeta().getDisplayName());
-                    if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
-                        item.put("extraInfo", itemList.extraInfo);
-                    }
-                    if (itemList.customType != null && itemList.customType.length() > 0) {
-                        item.put("customType", itemList.customType);
-                    }
-                    items.add(item);
+                    shop1.getInv().forEach(itemList -> {
+                        JSONObject item = new JSONObject();
+                        item.put("name", itemList.item.getType().getKey().getKey().toUpperCase());
+                        item.put("price", Integer.valueOf(itemList.price).toString());
+                        item.put("qty", itemList.qty);
+                        if (itemList.item.getItemMeta().hasDisplayName())
+                            item.put("customName", itemList.item.getItemMeta().getDisplayName());
+                        if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
+                            item.put("extraInfo", itemList.extraInfo);
+                        }
+                        if (itemList.customType != null && itemList.customType.length() > 0) {
+                            item.put("customType", itemList.customType);
+                        }
+                        items.add(item);
+                    });
+
+                    shopJSON.put("items", items);
+
+
+                    shopJSONs.add(shopJSON);
                 });
 
-                shopJSON.put("items", items);
+                pendingShops.forEach((s, shop1) -> {
+                    JSONObject shopJSON = new JSONObject();
+                    shopJSON.put("name", shop1.getName());
+                    shopJSON.put("desc", shop1.getDesc());
+                    shopJSON.put("owner", shop1.getOwner());
+                    shopJSON.put("owners", shop1.getOwners());
+                    shopJSON.put("uuid", shop1.getUuid());
+                    shopJSON.put("key", shop1.getKey());
+                    shopJSON.put("loc", shop1.getLoc());
+                    shopJSON.put("displayItem",shop1.getDisplayItem());
+
+                    JSONArray items = new JSONArray();
+
+                    shop1.getInv().forEach(itemList -> {
+                        JSONObject item = new JSONObject();
+                        item.put("name", itemList.item.getType().getKey().getKey().toUpperCase());
+                        item.put("price", Integer.valueOf(itemList.price).toString());
+                        item.put("qty", itemList.qty);
+                        if (itemList.item.getItemMeta().hasDisplayName()) {
+                            item.put("customName", itemList.item.getItemMeta().getDisplayName());
+                        }
+                        if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
+                            item.put("extraInfo", itemList.extraInfo);
+                        }
+                        if (itemList.customType != null && itemList.customType.length() > 0) {
+                            item.put("customType", itemList.customType);
+                        }
+                        items.add(item);
+                    });
+
+                    shopJSON.put("items", items);
 
 
-                shopJSONs.add(shopJSON);
-            });
-
-            pendingShops.forEach((s, shop1) -> {
-                JSONObject shopJSON = new JSONObject();
-                shopJSON.put("name", shop1.getName());
-                shopJSON.put("desc", shop1.getDesc());
-                shopJSON.put("owner", shop1.getOwner());
-                shopJSON.put("owners", shop1.getOwners());
-                shopJSON.put("uuid", shop1.getUuid());
-                shopJSON.put("key", shop1.getKey());
-                shopJSON.put("loc", shop1.getLoc());
-                shopJSON.put("displayItem",shop1.getDisplayItem());
-
-                JSONArray items = new JSONArray();
-
-                shop1.getInv().forEach(itemList -> {
-                    JSONObject item = new JSONObject();
-                    item.put("name", itemList.item.getType().getKey().getKey().toUpperCase());
-                    item.put("price", Integer.valueOf(itemList.price).toString());
-                    item.put("qty", itemList.qty);
-                    if (itemList.item.getItemMeta().hasDisplayName()) {
-                        item.put("customName", itemList.item.getItemMeta().getDisplayName());
-                    }
-                    if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
-                        item.put("extraInfo", itemList.extraInfo);
-                    }
-                    if (itemList.customType != null && itemList.customType.length() > 0) {
-                        item.put("customType", itemList.customType);
-                    }
-                    items.add(item);
+                    pShopJSONs.add(shopJSON);
                 });
 
-                shopJSON.put("items", items);
+                data.put("shops", shopJSONs);
+                data.put("pendingShops", pShopJSONs);
 
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonParser jp = new JsonParser();
+                JsonElement je = jp.parse(data.toJSONString());
+                String prettyJsonString = gson.toJson(je);
 
-                pShopJSONs.add(shopJSON);
-            });
+                FileWriter fw = new FileWriter(shopFile);
+                fw.write(prettyJsonString);
+                fw.flush();
+                fw.close();
 
-            data.put("shops", shopJSONs);
-            data.put("pendingShops", pShopJSONs);
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            JsonParser jp = new JsonParser();
-            JsonElement je = jp.parse(data.toJSONString());
-            String prettyJsonString = gson.toJson(je);
-
-            FileWriter fw = new FileWriter(shopFile);
-            fw.write(prettyJsonString);
-            fw.flush();
-            fw.close();
-
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
-        }
+            } catch (IOException | ParseException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private boolean initShops() {
