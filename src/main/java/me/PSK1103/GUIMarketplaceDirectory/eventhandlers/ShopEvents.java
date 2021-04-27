@@ -135,6 +135,8 @@ public class ShopEvents implements Listener {
             name = shopInitMatcher.group(1);
             d = shopInitMatcher.group(2);
 
+            System.out.println(shopInitMatcher.group(3));
+
             if(shopInitMatcher.group(3) != null)
                 displayItem = shopInitMatcher.group(3);
 
@@ -145,26 +147,39 @@ public class ShopEvents implements Listener {
                 return;
             }
 
-            String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId().toString();
+            String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId();
             String loc = editBookEvent.getPlayer().getLocation().getBlockX() + "," + editBookEvent.getPlayer().getLocation().getBlockZ();
             meta.addPage(key);
             meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
             editBookEvent.setNewBookMeta(meta);
 
-            if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
-                editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
-            }
-
             Player player = editBookEvent.getPlayer();
 
-            if(!plugin.getCustomConfig().multiOwnerEnabled())
-                plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
+            if(!plugin.getCustomConfig().multiOwnerEnabled()) {
+                if (!plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc, displayItem)) {
+                    player.sendMessage(ChatColor.RED + "Display item has no texture!");
+                    editBookEvent.setCancelled(true);
+                    return;
+                }
+            }
             else {
-                plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
+                if(!plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem)) {
+                    player.sendMessage(ChatColor.RED + "Display item has no texture!");
+                    editBookEvent.setCancelled(true);
+                    return;
+                }
+
+                if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
+                    editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
+                }
+
                 plugin.gui.sendConfirmationMessage(player,"Are you the owner of " + name + " ?");
                 return;
             }
 
+            if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
+                editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
+            }
             editBookEvent.getPlayer().sendMessage(ChatColor.GOLD + "Shop initialised successfully!");
         }
         else if(meta.getTitle().equalsIgnoreCase("[Marketplace]")) {

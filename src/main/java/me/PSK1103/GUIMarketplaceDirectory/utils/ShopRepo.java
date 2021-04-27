@@ -9,6 +9,8 @@ import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import net.minecraft.server.v1_16_R3.Item;
+import net.minecraft.server.v1_16_R3.Items;
 import org.bukkit.*;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.banner.Pattern;
@@ -24,6 +26,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
+import java.lang.reflect.*;
 
 import java.io.*;
 import java.util.*;
@@ -355,11 +358,21 @@ public class ShopRepo {
         }
     }
 
-    public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    public boolean addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
-        if(material != null)
+        if(material != null) {
+            try {
+                Field item = Items.class.getField(material.getKey().getKey().toUpperCase(Locale.ROOT));
+                Item baseItem = (Item)item.get(Items.class);
+                if(baseItem.q()==null)
+                    return false;
+            }
+            catch (SecurityException | NoSuchFieldException | IllegalAccessException | NullPointerException e) {
+                return false;
+            }
             shop.setDisplayItem(displayItem);
+        }
         else shop.setDisplayItem("WRITTEN_BOOK");
         if (plugin.getCustomConfig().directoryModerationEnabled())
             pendingShops.put(key, shop);
@@ -367,17 +380,29 @@ public class ShopRepo {
             shops.put(key, shop);
 
         saveShops();
+        return true;
     }
 
-    public void addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    public boolean addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
-        if(material != null)
+        if(material != null) {
+            try {
+                Field item = Items.class.getField(material.getKey().getKey().toUpperCase(Locale.ROOT));
+                Item baseItem = (Item)item.get(Items.class);
+                if(baseItem.q()==null)
+                    return false;
+            }
+            catch (SecurityException | NoSuchFieldException | IllegalAccessException | NullPointerException e) {
+                return false;
+            }
             shop.setDisplayItem(displayItem);
+        }
         else shop.setDisplayItem("WRITTEN_BOOK");
         waitingShops.put(uuid, shop);
         shopsUnderEdit.put(key, 2);
         shopsUnderAdd.put(uuid, key);
+        return true;
     }
 
     public String getOwner(String key) {

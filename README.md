@@ -35,6 +35,10 @@ Or you can choose your custom item later. <br>
 Make sure to not use any more "\[" and "\]" than required. <br>
 Sign it with the title `[shop init]` or `[init shop]`. 
 
+```
+NOTE: Where you sign your book matters!
+The coordinates of where the book was signed will be saved as your shop's coordinates.
+```
 <img src="Captures/init_shop.gif"> <br> <br>
 <img src="Captures/view_marketplace.gif">
 
