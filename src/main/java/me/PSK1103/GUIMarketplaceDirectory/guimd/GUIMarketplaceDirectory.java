@@ -49,7 +49,6 @@ public class GUIMarketplaceDirectory extends JavaPlugin {
     @Override
     public void onDisable() {
         shopRepo.saveShops();
-        super.onDisable();
     }
 
     @Nullable

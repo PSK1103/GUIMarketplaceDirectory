@@ -9,12 +9,12 @@ import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
-import net.minecraft.server.v1_16_R3.Item;
-import net.minecraft.server.v1_16_R3.Items;
 import org.bukkit.*;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.enchantments.EnchantmentWrapper;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -26,7 +26,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
-import java.lang.reflect.*;
 
 import java.io.*;
 import java.util.*;
@@ -66,7 +65,7 @@ class ItemList {
 
         lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s")));
         meta.setLore(lore);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, /*ItemFlag.HIDE_ENCHANTS,*/ ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
     }
 
@@ -97,7 +96,7 @@ class ItemList {
             case "potion":
             case "tippedArrow":
                 PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-                PotionData base = new PotionData(PotionType.valueOf(extraInfo.get("effect").toString()), (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
+                PotionData base = new PotionData( PotionType.values()[Double.valueOf(extraInfo.get("effect").toString()).intValue()], (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
                 potionMeta.setBasePotionData(base);
                 item.setItemMeta(potionMeta);
                 break;
@@ -168,6 +167,12 @@ class ItemList {
 
                 break;
         }
+        if (extraInfo.containsKey("enchants")) {
+            Map<String,Double> codedEnchants = (Map<String, Double>) extraInfo.get("enchants");
+            Map<Enchantment,Integer> enchants = new HashMap<>();
+            codedEnchants.forEach((enchant, integer) -> enchants.put(new EnchantmentWrapper(enchant),integer.intValue()));
+            item.addEnchantments(enchants);
+        }
         return item;
     }
 
@@ -203,15 +208,21 @@ class ItemList {
 
         else return;
 
-        if(price <=0) {
+        if(price < 0) {
             this.price = -1;
             lore.add(ChatColor.GRAY + "Price hidden or variable");
+        }
+        else if(price == 0) {
+            lore.add(ChatColor.GREEN + "Free!");
         }
         else {
             lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
         }
+        /*List<String> oldLore = meta.getLore();
+        if(oldLore!=null)
+            lore.addAll(oldLore);*/
         meta.setLore(lore);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, /*ItemFlag.HIDE_ENCHANTS,*/ ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
     }
 
@@ -335,6 +346,13 @@ public class ShopRepo {
     private final HashMap<String, String> shopsUnderReject;
     private final HashMap<String, String> shopsUnderRemove;
 
+    private static final EnumSet<Material> materialsWithoutTextures = EnumSet.noneOf(Material.class);
+
+    static {
+        materialsWithoutTextures.addAll(Arrays.asList(Material.LAVA, Material.WATER, Material.BUBBLE_COLUMN,Material.PISTON_HEAD,
+                Material.MOVING_PISTON,Material.AIR,Material.ATTACHED_MELON_STEM, Material.ATTACHED_PUMPKIN_STEM));
+    }
+
     private final Logger logger;
 
     public ShopRepo(GUIMarketplaceDirectory plugin) {
@@ -358,19 +376,10 @@ public class ShopRepo {
         }
     }
 
-    public boolean addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
-        if(material != null) {
-            try {
-                Field item = Items.class.getField(material.getKey().getKey().toUpperCase(Locale.ROOT));
-                Item baseItem = (Item)item.get(Items.class);
-                if(baseItem.q()==null)
-                    return false;
-            }
-            catch (SecurityException | NoSuchFieldException | IllegalAccessException | NullPointerException e) {
-                return false;
-            }
+        if(material != null && !materialsWithoutTextures.contains(material)) {
             shop.setDisplayItem(displayItem);
         }
         else shop.setDisplayItem("WRITTEN_BOOK");
@@ -380,29 +389,18 @@ public class ShopRepo {
             shops.put(key, shop);
 
         saveShops();
-        return true;
     }
 
-    public boolean addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    public void addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
-        if(material != null) {
-            try {
-                Field item = Items.class.getField(material.getKey().getKey().toUpperCase(Locale.ROOT));
-                Item baseItem = (Item)item.get(Items.class);
-                if(baseItem.q()==null)
-                    return false;
-            }
-            catch (SecurityException | NoSuchFieldException | IllegalAccessException | NullPointerException e) {
-                return false;
-            }
+        if(material != null && !materialsWithoutTextures.contains(material)) {
             shop.setDisplayItem(displayItem);
         }
         else shop.setDisplayItem("WRITTEN_BOOK");
         waitingShops.put(uuid, shop);
         shopsUnderEdit.put(key, 2);
         shopsUnderAdd.put(uuid, key);
-        return true;
     }
 
     public String getOwner(String key) {
@@ -463,7 +461,7 @@ public class ShopRepo {
         return shopsUnderAdd.containsKey(uuid) && shopsUnderEdit.containsKey(shopsUnderAdd.get(uuid)) || waitingShops.containsKey(uuid);
     }
 
-    public void addOwner(String uuid, Player player) {
+    public void addOwner(String uuid, OfflinePlayer player) {
         if (waitingShops.containsKey(uuid)) {
             Shop shop = waitingShops.get(uuid);
             shop.setOwner(player.getName());
@@ -638,10 +636,10 @@ public class ShopRepo {
                                 ItemList item = new ItemList(itemJSON.get("name").toString(), itemJSON.get("qty").toString(), Integer.parseInt(itemJSON.get("price").toString()));
                                 if (itemJSON.get("customName") != null)
                                     item.setCustomName(itemJSON.get("customName").toString());
-                                if (itemJSON.containsKey("extraInfo") && itemJSON.containsKey("customType")) {
+                                if (itemJSON.containsKey("extraInfo")) {
                                     JSONObject extraData = ((JSONObject) itemJSON.get("extraInfo"));
                                     HashMap<String, Object> headInfo = new Gson().fromJson(extraData.toString(), HashMap.class);
-                                    item.setExtraInfo(headInfo, itemJSON.get("customType").toString());
+                                    item.setExtraInfo(headInfo, itemJSON.getOrDefault("customType","").toString());
                                 }
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
@@ -689,7 +687,7 @@ public class ShopRepo {
                                 if (itemJSON.containsKey("extraInfo") && itemJSON.containsKey("customType")) {
                                     JSONObject headData = ((JSONObject) itemJSON.get("extraInfo"));
                                     HashMap<String, Object> headInfo = new Gson().fromJson(headData.toString(), HashMap.class);
-                                    item.setExtraInfo(headInfo, itemJSON.get("customType").toString());
+                                    item.setExtraInfo(headInfo, itemJSON.getOrDefault("customType","").toString());
                                 }
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
@@ -773,7 +771,7 @@ public class ShopRepo {
                             PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
                             Map<String, Object> data = new HashMap<>();
                             PotionData potionType = potionMeta.getBasePotionData();
-                            data.put("effect", potionType.getType().getEffectType().getName().toUpperCase());
+                            data.put("effect", potionType.getType().ordinal());
                             data.put("upgraded", potionType.isUpgraded());
                             data.put("extended", potionType.isExtended());
                             content.put("extraInfo", data);
@@ -804,7 +802,7 @@ public class ShopRepo {
                             PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
                             Map<String, Object> data = new HashMap<>();
                             PotionData potionType = potionMeta.getBasePotionData();
-                            data.put("effect", potionType.getType().getEffectType().getName().toUpperCase());
+                            data.put("effect", potionType.getType().ordinal());
                             data.put("upgraded", potionType.isUpgraded());
                             data.put("extended", potionType.isExtended());
                             content.put("extraInfo", data);
@@ -850,7 +848,7 @@ public class ShopRepo {
             PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
             Map<String, Object> data = new HashMap<>();
             PotionData potionType = potionMeta.getBasePotionData();
-            data.put("effect", potionType.getType().getEffectType().getName().toUpperCase());
+            data.put("effect", potionType.getType().ordinal());
             data.put("upgraded", potionType.isUpgraded());
             data.put("extended", potionType.isExtended());
             item.extraInfo = data;
@@ -881,7 +879,7 @@ public class ShopRepo {
             PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
             Map<String, Object> data = new HashMap<>();
             PotionData potionType = potionMeta.getBasePotionData();
-            data.put("effect", potionType.getType().getEffectType().getName().toUpperCase());
+            data.put("effect", potionType.getType().ordinal());
             data.put("upgraded", potionType.isUpgraded());
             data.put("extended", potionType.isExtended());
             item.extraInfo = data;
@@ -898,6 +896,15 @@ public class ShopRepo {
             item.extraInfo = new HashMap<>();
             item.extraInfo.put("patterns", patterns);
             item.customType = "banner";
+        }
+
+        Map<Enchantment,Integer> enchants = itemStack.getEnchantments();
+        if(!enchants.isEmpty()) {
+            if(item.extraInfo==null)
+                item.extraInfo = new HashMap<>();
+                Map<String,Integer> codedEnchants = new HashMap<>();
+                enchants.forEach((enchantment, integer) -> codedEnchants.put(enchantment.getKey().getKey(),integer));
+                item.extraInfo.put("enchants",codedEnchants);
         }
 
         shopsUnderAdd.put(uuid, key);
@@ -1076,6 +1083,10 @@ public class ShopRepo {
         shops.forEach((s, shop) ->
                 shop.getInv().forEach(itemList -> {
                     if (itemList.name.equals(name)) {
+                        /*if(item.item.getType() == Material.POTION && itemList.item.getType() == Material.POTION && ((PotionMeta)item.item.getItemMeta()).getBasePotionData().getType() == ((PotionMeta)itemList.item.getItemMeta()).getBasePotionData().getType())
+                            return;
+                        if (item.extraInfo.containsKey("enchants") && item.extraInfo.containsKey("enchants") && item.item.getEnchantments().keySet().stream().anyMatch(enchantment -> itemList.item.getEnchantments().containsKey(enchantment)))
+                            return;*/
                         double val = 0;
                         String[] parts = itemList.qty.split(":");
                         if (Integer.parseInt(parts[0]) > 0)

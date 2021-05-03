@@ -25,6 +25,7 @@ public class Config {
     private int shopDetailsLengthLimit;
 
     private boolean multiOwner;
+    private boolean allowAddingOfflinePLayer;
 
     private boolean enableCustomApprovalMessage;
     private String customApprovalMessage;
@@ -62,6 +63,7 @@ public class Config {
             shopDetailsLengthLimit = configFile.getInt("shop-details-length-limit",defaultConfig.getInt("shop-details-length-limit",-1));
 
             multiOwner = configFile.getBoolean("multi-owner",defaultConfig.getBoolean("multi-owner"));
+            allowAddingOfflinePLayer = configFile.getBoolean("allow-add-offline-players",defaultConfig.getBoolean("allow-add-offline-players"));
 
             enableCustomApprovalMessage = configFile.getBoolean("enable-custom-approval-message",defaultConfig.getBoolean("enable-custom-approval-message"));
             customApprovalMessage = configFile.getString("custom-approval-message",defaultConfig.getString("custom-approval-message"));
@@ -92,6 +94,7 @@ public class Config {
             shopDetailsLengthLimit = defaultConfig.getInt("shop-details-length-limit",-1);
 
             multiOwner = defaultConfig.getBoolean("multi-owner");
+            allowAddingOfflinePLayer = defaultConfig.getBoolean("allow-add-offline-players");
 
             enableCustomApprovalMessage = defaultConfig.getBoolean("enable-custom-approval-message");
             customApprovalMessage = defaultConfig.getString("custom-approval-message");
@@ -199,6 +202,10 @@ public class Config {
 
     public boolean multiOwnerEnabled() {
         return multiOwner;
+    }
+
+    public boolean addingOfflinePlayerAllowed() {
+        return allowAddingOfflinePLayer;
     }
 
     public boolean customApprovalMessageEnabled() {

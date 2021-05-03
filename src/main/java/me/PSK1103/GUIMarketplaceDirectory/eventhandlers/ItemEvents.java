@@ -4,6 +4,7 @@ import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.ShopInvHolder;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,8 +13,10 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
+import java.util.Map;
 
 public class ItemEvents implements Listener {
     final GUIMarketplaceDirectory plugin;
@@ -35,9 +38,12 @@ public class ItemEvents implements Listener {
             }
 
             ItemStack item = itemEvent.getCurrentItem();
+
             if(item == null || item.getType().isAir()) {
                 return;
             }
+            ItemMeta tempMeta = item.getItemMeta();
+            Map<Enchantment,Integer> enchantmentMap = tempMeta.getEnchants();
             String name = item.getType().getKey().getKey().toUpperCase();
             Player player = ((Player) itemEvent.getWhoClicked());
             Inventory inventory = itemEvent.getInventory();
@@ -106,7 +112,7 @@ public class ItemEvents implements Listener {
             addItemDetails.setCancelled(true);
             return;
         }
-        if(addItemDetails.getMessage().matches("\\d+") && plugin.getShopRepo().isAddingItem(addItemDetails.getPlayer().getUniqueId().toString())) {
+        if(addItemDetails.getMessage().matches("-?\\d+") && plugin.getShopRepo().isAddingItem(addItemDetails.getPlayer().getUniqueId().toString())) {
             plugin.getShopRepo().setPrice(Integer.parseInt(addItemDetails.getMessage()),addItemDetails.getPlayer().getUniqueId().toString());
             addItemDetails.getPlayer().sendMessage(ChatColor.GOLD + "Item added successfully!");
             addItemDetails.setCancelled(true);

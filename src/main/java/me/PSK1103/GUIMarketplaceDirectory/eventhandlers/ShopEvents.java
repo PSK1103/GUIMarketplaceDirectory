@@ -7,6 +7,7 @@ import net.minecraft.server.v1_16_R3.PacketPlayOutOpenBook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,11 +20,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ShopEvents implements Listener {
 
@@ -156,18 +156,10 @@ public class ShopEvents implements Listener {
             Player player = editBookEvent.getPlayer();
 
             if(!plugin.getCustomConfig().multiOwnerEnabled()) {
-                if (!plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc, displayItem)) {
-                    player.sendMessage(ChatColor.RED + "Display item has no texture!");
-                    editBookEvent.setCancelled(true);
-                    return;
-                }
+                plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc, displayItem);
             }
             else {
-                if(!plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem)) {
-                    player.sendMessage(ChatColor.RED + "Display item has no texture!");
-                    editBookEvent.setCancelled(true);
-                    return;
-                }
+                plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
 
                 if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
                     editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
@@ -346,14 +338,26 @@ public class ShopEvents implements Listener {
                     return;
                 }
                 String playerName = chatEvent.getMessage();
-                List<Player> players = plugin.getServer().matchPlayer(playerName);
+
+                List<OfflinePlayer> players;
+                if(plugin.getCustomConfig().addingOfflinePlayerAllowed())
+                    try {
+                        players = Arrays.stream(plugin.getServer().getOfflinePlayers()).filter(offlinePlayer -> offlinePlayer.getName().toUpperCase(Locale.ROOT).startsWith(playerName)).collect(Collectors.toList());
+                    } catch (NullPointerException e) {
+                        chatEvent.getPlayer().sendMessage(ChatColor.RED + "Player data not found");
+                        players = new ArrayList<>();
+                    }
+                else
+                    players = plugin.getServer().matchPlayer(playerName).stream().map(player -> (OfflinePlayer) player).collect(Collectors.toList());
+
+
                 if (players.size() == 0) {
                     chatEvent.getPlayer().sendMessage(ChatColor.RED + "No player found, try again");
                 } else if (players.size() > 1) {
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Multiple players found, be more specific");
                 } else {
                     plugin.getShopRepo().addOwner(uuid, players.get(0));
-                    chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getDisplayName() + " successfully added as owner");
+                    chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getName() + " successfully added as owner");
                 }
             } else if(editType == 3) {
                 if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
