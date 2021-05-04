@@ -12,6 +12,7 @@ public class ShopInvHolder implements InventoryHolder {
     final String key;
     final ItemStack item;
     List<Map<String,String>> shops;
+    List<ItemStack> items;
     final int type;
     @Override
     public @NotNull Inventory getInventory() {
@@ -30,10 +31,11 @@ public class ShopInvHolder implements InventoryHolder {
         shops = null;
     }
 
-    public ShopInvHolder(String key,int type) {
+    public ShopInvHolder(String key,int type,List<ItemStack> items) {
         super();
         this.key = key;
         this.type = type;
+        this.items = items;
         this.item = null;
         shops = null;
     }
@@ -60,5 +62,9 @@ public class ShopInvHolder implements InventoryHolder {
 
     public ItemStack getItem() {
         return item;
+    }
+
+    public List<ItemStack> getInv() {
+        return items;
     }
 }

@@ -87,7 +87,7 @@ class ItemList {
                 NBTItem head = new NBTItem(item);
                 NBTCompound skull = head.addCompound("SkullOwner");
                 skull.setString("Name", extraInfo.get("name").toString());
-                skull.setString("Id", extraInfo.get("uuid").toString());
+                skull.setString("Id", UUID.randomUUID().toString());
                 NBTListCompound texture = skull.addCompound("Properties").getCompoundList("textures").addCompound();
                 texture.setString("Signature", extraInfo.get("signature").toString());
                 texture.setString("Value", extraInfo.get("value").toString());
@@ -96,7 +96,8 @@ class ItemList {
             case "potion":
             case "tippedArrow":
                 PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-                PotionData base = new PotionData( PotionType.values()[Double.valueOf(extraInfo.get("effect").toString()).intValue()], (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
+                Object integer1 = extraInfo.get("effect");
+                PotionData base = new PotionData(PotionType.values()[integer1 instanceof String ? Integer.parseInt(integer1.toString()) : integer1 instanceof Integer ? Integer.parseInt(integer1.toString()) : Double.valueOf(integer1.toString()).intValue()], (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
                 potionMeta.setBasePotionData(base);
                 item.setItemMeta(potionMeta);
                 break;
@@ -166,11 +167,16 @@ class ItemList {
                 item.setItemMeta(blockStateMeta);
 
                 break;
+            case "enchantedBook":
+                Map<String,Object> enchants = (Map<String, Object>) extraInfo.get("storedEnchants");
+                EnchantmentStorageMeta esm = (EnchantmentStorageMeta) item.getItemMeta();
+                enchants.forEach((enchant, integer) -> esm.addStoredEnchant(new EnchantmentWrapper(enchant), integer instanceof String ? Integer.parseInt(integer.toString()) : integer instanceof Integer ? Integer.parseInt(integer.toString()) : Double.valueOf(integer.toString()).intValue(),false));
+                item.setItemMeta(esm);
         }
         if (extraInfo.containsKey("enchants")) {
-            Map<String,Double> codedEnchants = (Map<String, Double>) extraInfo.get("enchants");
+            Map<String,Object> codedEnchants = (Map<String, Object>) extraInfo.get("enchants");
             Map<Enchantment,Integer> enchants = new HashMap<>();
-            codedEnchants.forEach((enchant, integer) -> enchants.put(new EnchantmentWrapper(enchant),integer.intValue()));
+            codedEnchants.forEach((enchant, integer) -> enchants.put(new EnchantmentWrapper(enchant), integer instanceof String ? Integer.parseInt(integer.toString()) : integer instanceof Integer ? Integer.parseInt(integer.toString()) : Double.valueOf(integer.toString()).intValue()));
             item.addEnchantments(enchants);
         }
         return item;
@@ -651,8 +657,8 @@ public class ShopRepo {
                             }
                         }
                         shops.put(shopJSON.get("key").toString(), shop);
-                    } catch (ClassCastException | NullPointerException e) {
-                        if (e instanceof ClassCastException)
+                    } catch (ClassCastException | NumberFormatException | NullPointerException e) {
+                        if (e instanceof ClassCastException || e instanceof NumberFormatException)
                             logger.error("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
                             logger.warn("Key value(s) missing, shop won't be created");
@@ -699,8 +705,8 @@ public class ShopRepo {
                             }
                         }
                         pendingShops.put(shopJSON.get("key").toString(), shop);
-                    } catch (ClassCastException | NullPointerException e) {
-                        if (e instanceof ClassCastException)
+                    } catch (ClassCastException | NumberFormatException | NullPointerException e) {
+                        if (e instanceof ClassCastException || e instanceof NumberFormatException)
                             logger.warn("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
                             logger.warn("Key value(s) missing, shop won't be created");
@@ -746,6 +752,7 @@ public class ShopRepo {
 
                     for (int i = 0; i < 27; i++) {
                         ItemStack itemStack1 = shulker.getSnapshotInventory().getItem(i);
+                        String n = itemStack1.getType().getKey().getKey().toUpperCase(Locale.ROOT);
                         if (itemStack1 == null || itemStack1.getType() == Material.AIR)
                             continue;
 
@@ -758,25 +765,23 @@ public class ShopRepo {
                             NBTCompound skullOwner = nbtItem.getCompound("SkullOwner");
                             if (skullOwner != null) {
                                 Map<String, Object> skullData = new HashMap<>();
-                                SkullMeta skullMeta = (SkullMeta) itemStack1.getItemMeta();
-                                skullData.put("name", skullMeta.getOwningPlayer().getName());
-                                skullData.put("uuid", skullMeta.getOwningPlayer().getUniqueId().toString());
+                                skullData.put("name", skullOwner.getString("Name"));
                                 skullData.put("value", skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Value"));
                                 skullData.put("signature", skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Signature"));
                                 content.put("extraInfo", skullData);
                                 content.put("customType", "head");
                                 item.customType = "head";
                             } else res = 2;
-                        } else if (name.contains("POTION")) {
+                        } else if (n.contains("POTION")) {
                             PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
                             Map<String, Object> data = new HashMap<>();
                             PotionData potionType = potionMeta.getBasePotionData();
-                            data.put("effect", potionType.getType().ordinal());
+                            data.put("effect", Integer.valueOf(potionType.getType().ordinal()).toString());
                             data.put("upgraded", potionType.isUpgraded());
                             data.put("extended", potionType.isExtended());
                             content.put("extraInfo", data);
                             content.put("customType", "potion");
-                        } else if (name.contains("FIREWORK_ROCKET")) {
+                        } else if (n.contains("FIREWORK_ROCKET")) {
                             FireworkMeta rocketMeta = (FireworkMeta) itemStack1.getItemMeta();
                             List<Object> effects = new ArrayList<>();
                             rocketMeta.getEffects().forEach(fireworkEffect -> {
@@ -798,16 +803,16 @@ public class ShopRepo {
                             fireworksData.put("effects", effects);
                             content.put("extraInfo", fireworksData);
                             content.put("customType", "rocket");
-                        } else if (name.contains("TIPPED_ARROW")) {
+                        } else if (n.contains("TIPPED_ARROW")) {
                             PotionMeta potionMeta = (PotionMeta) itemStack1.getItemMeta();
                             Map<String, Object> data = new HashMap<>();
                             PotionData potionType = potionMeta.getBasePotionData();
-                            data.put("effect", potionType.getType().ordinal());
+                            data.put("effect", Integer.valueOf(potionType.getType().ordinal()).toString());
                             data.put("upgraded", potionType.isUpgraded());
                             data.put("extended", potionType.isExtended());
                             content.put("extraInfo", data);
                             content.put("customType", "tippedArrow");
-                        } else if (name.contains("BANNER")) {
+                        } else if (n.contains("BANNER")) {
                             BannerMeta bannerMeta = (BannerMeta) itemStack1.getItemMeta();
                             List<Object> patterns = new ArrayList<>();
                             bannerMeta.getPatterns().forEach(pattern -> {
@@ -820,6 +825,12 @@ public class ShopRepo {
                             info.put("patterns", patterns);
                             content.put("extraInfo", info);
                             content.put("customType", "banner");
+                        } else if(itemStack1.getType() == Material.ENCHANTED_BOOK) {
+                            Map<String,String> storedEnchants = new HashMap<>();
+                            ((EnchantmentStorageMeta) itemStack.getItemMeta()).getStoredEnchants().forEach((enchantment, integer) -> storedEnchants.put(enchantment.getKey().getKey(),integer.toString()));
+                            item.extraInfo = new HashMap<>();
+                            item.extraInfo.put("storedEnchants",storedEnchants);
+                            item.customType = "enchantedBook";
                         }
 
                         contents.add(content);
@@ -836,9 +847,7 @@ public class ShopRepo {
             NBTCompound skullOwner = nbtItem.getCompound("SkullOwner");
             if (skullOwner != null) {
                 Map<String, Object> skullData = new HashMap<>();
-                SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-                skullData.put("name", skullMeta.getOwningPlayer().getName());
-                skullData.put("uuid", skullMeta.getOwningPlayer().getUniqueId().toString());
+                skullData.put("name", skullOwner.getString("Name"));
                 skullData.put("value", skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Value"));
                 skullData.put("signature", skullOwner.getCompound("Properties").getCompoundList("textures").get(0).getString("Signature"));
                 item.extraInfo = skullData;
@@ -848,7 +857,7 @@ public class ShopRepo {
             PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
             Map<String, Object> data = new HashMap<>();
             PotionData potionType = potionMeta.getBasePotionData();
-            data.put("effect", potionType.getType().ordinal());
+            data.put("effect", Integer.valueOf(potionType.getType().ordinal()).toString());
             data.put("upgraded", potionType.isUpgraded());
             data.put("extended", potionType.isExtended());
             item.extraInfo = data;
@@ -879,7 +888,7 @@ public class ShopRepo {
             PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
             Map<String, Object> data = new HashMap<>();
             PotionData potionType = potionMeta.getBasePotionData();
-            data.put("effect", potionType.getType().ordinal());
+            data.put("effect", Integer.valueOf(potionType.getType().ordinal()).toString());
             data.put("upgraded", potionType.isUpgraded());
             data.put("extended", potionType.isExtended());
             item.extraInfo = data;
@@ -897,13 +906,20 @@ public class ShopRepo {
             item.extraInfo.put("patterns", patterns);
             item.customType = "banner";
         }
+        else if(itemStack.getType() == Material.ENCHANTED_BOOK) {
+            Map<String,String> storedEnchants = new HashMap<>();
+            ((EnchantmentStorageMeta) itemStack.getItemMeta()).getStoredEnchants().forEach((enchantment, integer) -> storedEnchants.put(enchantment.getKey().getKey(),integer.toString()));
+            item.extraInfo = new HashMap<>();
+            item.extraInfo.put("storedEnchants",storedEnchants);
+            item.customType = "enchantedBook";
+        }
 
         Map<Enchantment,Integer> enchants = itemStack.getEnchantments();
         if(!enchants.isEmpty()) {
             if(item.extraInfo==null)
                 item.extraInfo = new HashMap<>();
-                Map<String,Integer> codedEnchants = new HashMap<>();
-                enchants.forEach((enchantment, integer) -> codedEnchants.put(enchantment.getKey().getKey(),integer));
+                Map<String,String> codedEnchants = new HashMap<>();
+                enchants.forEach((enchantment, integer) -> codedEnchants.put(enchantment.getKey().getKey(),integer.toString()));
                 item.extraInfo.put("enchants",codedEnchants);
         }
 
@@ -1083,10 +1099,12 @@ public class ShopRepo {
         shops.forEach((s, shop) ->
                 shop.getInv().forEach(itemList -> {
                     if (itemList.name.equals(name)) {
-                        /*if(item.item.getType() == Material.POTION && itemList.item.getType() == Material.POTION && ((PotionMeta)item.item.getItemMeta()).getBasePotionData().getType() == ((PotionMeta)itemList.item.getItemMeta()).getBasePotionData().getType())
-                            return;
-                        if (item.extraInfo.containsKey("enchants") && item.extraInfo.containsKey("enchants") && item.item.getEnchantments().keySet().stream().anyMatch(enchantment -> itemList.item.getEnchantments().containsKey(enchantment)))
-                            return;*/
+                        if(plugin.getCustomConfig().filterAlternatives()) {
+                            if(((item.item.getType() == Material.POTION && itemList.item.getType() == Material.POTION) || (item.item.getType() == Material.LINGERING_POTION && itemList.item.getType() == Material.LINGERING_POTION) || (item.item.getType() == Material.TIPPED_ARROW && itemList.item.getType() == Material.TIPPED_ARROW)) && ((PotionMeta)item.item.getItemMeta()).getBasePotionData().getType().ordinal() != ((PotionMeta)itemList.item.getItemMeta()).getBasePotionData().getType().ordinal())
+                                return;
+                            if (item.item.getType() == Material.ENCHANTED_BOOK && item.extraInfo.containsKey("storedEnchants") && itemList.item.getType() == Material.ENCHANTED_BOOK && itemList.extraInfo.containsKey("storedEnchants") && ((EnchantmentStorageMeta)item.item.getItemMeta()).getStoredEnchants().keySet().stream().noneMatch(enchantment -> ((EnchantmentStorageMeta)itemList.item.getItemMeta()).getStoredEnchants().containsKey(enchantment)))
+                                return;
+                        }
                         double val = 0;
                         String[] parts = itemList.qty.split(":");
                         if (Integer.parseInt(parts[0]) > 0)

@@ -95,7 +95,7 @@ public class GUI {
     public void openShopInventory(Player player, String key,String name,int type) {
 
         List<ItemStack> inv = plugin.getShopRepo().getShopInv(key);
-        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(key,type),Math.min(9*(inv.size()/9),45) + 9,name);
+        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(key,type,inv),Math.min(9*(inv.size()/9),45) + 9,name);
         for(int i=0;i<Math.min(inv.size(),45);i++) {
             shopInventory.setItem(i,inv.get(i));
         }
@@ -114,6 +114,85 @@ public class GUI {
         back.setItemMeta(meta);
         shopInventory.setItem(Math.min(9*(inv.size()/9),45) + 8,back);
         player.openInventory(shopInventory);
+        if(inv.size()>45) {
+            ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+            ItemMeta nextPageMeta = nextPage.getItemMeta();
+            nextPageMeta.setDisplayName("Next Page");
+            nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            nextPage.setItemMeta(nextPageMeta);
+            shopInventory.setItem(49,nextPage);
+            ItemStack prevPage = new ItemStack(Material.BARRIER);
+            ItemMeta prevPageMeta = prevPage.getItemMeta();
+            prevPageMeta.setDisplayName("Previous Page");
+            prevPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            prevPage.setItemMeta(prevPageMeta);
+            shopInventory.setItem(48,prevPage);
+            ItemStack pageNum = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
+            ItemMeta pageNumMeta = pageNum.getItemMeta();
+            pageNumMeta.setDisplayName("Page 1");
+            pageNum.setItemMeta(pageNumMeta);
+            shopInventory.setItem(45,pageNum);
+        }
+    }
+
+    public void nextInvPage(Player player, int currPage) {
+        Inventory nextPageInv = player.getOpenInventory().getTopInventory();
+        ShopInvHolder holder = (ShopInvHolder) nextPageInv.getHolder();
+        List<ItemStack> inv = holder.getInv();
+        int type = holder.getType();
+        nextPageInv.clear();
+        for(int i=0;i<Math.min(inv.size(),(currPage+1)*45)-currPage*45;i++) {
+            nextPageInv.setItem(i,inv.get(i+currPage*45));
+        }
+
+        ItemStack nextPage = inv.size() > (currPage+1)*45 ? new ItemStack(Material.LIME_STAINED_GLASS_PANE): new ItemStack(Material.BARRIER);
+        ItemMeta nextPageMeta = nextPage.getItemMeta();
+        nextPageMeta.setDisplayName("Next Page");
+        nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        nextPage.setItemMeta(nextPageMeta);
+        nextPageInv.setItem(49,nextPage);
+        ItemStack prevPage = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
+        ItemMeta prevPageMeta = prevPage.getItemMeta();
+        prevPageMeta.setDisplayName("Previous Page");
+        prevPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        prevPage.setItemMeta(prevPageMeta);
+        nextPageInv.setItem(48,prevPage);
+        ItemStack pageNum = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
+        ItemMeta pageNumMeta = pageNum.getItemMeta();
+        pageNumMeta.setDisplayName("Page " + (currPage+1));
+        pageNum.setItemMeta(pageNumMeta);
+        nextPageInv.setItem(45,pageNum);
+        player.updateInventory();
+    }
+
+    public void prevInvPage(Player player, int currPage) {
+        currPage-=2;
+        Inventory prevPageInv = player.getOpenInventory().getTopInventory();
+        ShopInvHolder holder = (ShopInvHolder) prevPageInv.getHolder();
+        List<ItemStack> inv = holder.getInv();
+        int type = holder.getType();
+        prevPageInv.clear();
+        for(int i=0;i<Math.min(inv.size(),(currPage+1)*45)-currPage*45;i++) {
+            prevPageInv.setItem(i,inv.get(i));
+        }
+        ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta nextPageMeta = nextPage.getItemMeta();
+        nextPageMeta.setDisplayName("Next Page");
+        nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        nextPage.setItemMeta(nextPageMeta);
+        prevPageInv.setItem(49,nextPage);
+        ItemStack prevPage = currPage > 0 ? new ItemStack(Material.ORANGE_STAINED_GLASS_PANE) : new ItemStack(Material.BARRIER);
+        ItemMeta prevPageMeta = prevPage.getItemMeta();
+        prevPageMeta.setDisplayName("Previous Page");
+        prevPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        prevPage.setItemMeta(prevPageMeta);
+        prevPageInv.setItem(48,prevPage);
+        ItemStack pageNum = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
+        ItemMeta pageNumMeta = pageNum.getItemMeta();
+        pageNumMeta.setDisplayName("Page " + (currPage+1));
+        pageNum.setItemMeta(pageNumMeta);
+        prevPageInv.setItem(45,pageNum);
+        player.updateInventory();
     }
 
     public void nextPage(Player player, int currPage) {
@@ -282,7 +361,7 @@ public class GUI {
             return;
         }
 
-        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder("",6).setShops(shops),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54),"Search results");
+        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder("",6,null).setShops(shops),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54),"Search results");
 
         for(int i=0;i<Math.min(refinedItems.size(),54);i++) {
             refinedItemInv.setItem(i,refinedItems.get(i));
@@ -353,7 +432,7 @@ public class GUI {
 
     public void openShopEditMenu(Player player, String key) {
         String name = plugin.getShopRepo().getShopName(key);
-        Inventory shopEditMenuInv = Bukkit.createInventory(new ShopInvHolder(key,4),9,name);
+        Inventory shopEditMenuInv = Bukkit.createInventory(new ShopInvHolder(key,4,null),9,name);
         ItemStack addOwner = new ItemStack(Material.BEACON);
         ItemMeta addOwnerMeta = addOwner.getItemMeta();
         addOwnerMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + "Add owner");

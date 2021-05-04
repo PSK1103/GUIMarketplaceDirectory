@@ -145,6 +145,20 @@ public class ItemEvents implements Listener {
             Player player = ((Player) itemCheckEvent.getWhoClicked());
             if(type < 4) {
 
+                int currPage = 1;
+
+                if(itemCheckEvent.getRawSlot() > 44 && (itemCheckEvent.getInventory().getItem(46) == null || itemCheckEvent.getInventory().getItem(46).getType() == Material.AIR) && (itemCheckEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE || itemCheckEvent.getCurrentItem().getType() == Material.ORANGE_STAINED_GLASS_PANE)) {
+                    if(itemCheckEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
+                        currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                        plugin.gui.nextInvPage(((Player) itemCheckEvent.getWhoClicked()),currPage);
+                    }
+                    if(itemCheckEvent.getCurrentItem().getType() == Material.ORANGE_STAINED_GLASS_PANE) {
+                        currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                        plugin.gui.prevInvPage(((Player) itemCheckEvent.getWhoClicked()),currPage);
+                    }
+                    return;
+                }
+
                 if (itemCheckEvent.getCurrentItem() != null && itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize() - 1) {
                     player.closeInventory();
                     if (type == 0) {
@@ -155,7 +169,7 @@ public class ItemEvents implements Listener {
                     return;
                 }
 
-                if (itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem() != null && itemCheckEvent.getCurrentItem().getType() != Material.AIR && itemCheckEvent.getCurrentItem().getType() != Material.BARRIER) {
+                if (itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem() != null && itemCheckEvent.getCurrentItem().getType() != Material.AIR && itemCheckEvent.getCurrentItem().getType() != Material.BARRIER && itemCheckEvent.getRawSlot()<45) {
                     plugin.getShopRepo().findBetterAlternative(player, holder.getKey(), itemCheckEvent.getRawSlot());
                 }
             }

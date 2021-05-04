@@ -26,7 +26,7 @@ allow-add-offline-players: false
 
 #this filtering will work in two ways
 #while searching for alternatives to potions the results will only show potions with similar effects
-#while searching for alternatives to items/books with enchantments the results will only show items/books with at least one type of enchant in common
+#while searching for alternatives to enchanted books the results will only show books with at least one type of enchant in common
 filter-alternatives-list: false
 
 #enables bstats

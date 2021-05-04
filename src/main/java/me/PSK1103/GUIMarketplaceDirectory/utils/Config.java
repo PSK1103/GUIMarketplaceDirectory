@@ -27,6 +27,8 @@ public class Config {
     private boolean multiOwner;
     private boolean allowAddingOfflinePLayer;
 
+    private boolean filterAlternatives;
+
     private boolean enableCustomApprovalMessage;
     private String customApprovalMessage;
 
@@ -65,6 +67,8 @@ public class Config {
             multiOwner = configFile.getBoolean("multi-owner",defaultConfig.getBoolean("multi-owner"));
             allowAddingOfflinePLayer = configFile.getBoolean("allow-add-offline-players",defaultConfig.getBoolean("allow-add-offline-players"));
 
+            filterAlternatives = configFile.getBoolean("filter-alternatives-list",defaultConfig.getBoolean("filter-alternatives-list"));
+
             enableCustomApprovalMessage = configFile.getBoolean("enable-custom-approval-message",defaultConfig.getBoolean("enable-custom-approval-message"));
             customApprovalMessage = configFile.getString("custom-approval-message",defaultConfig.getString("custom-approval-message"));
 
@@ -90,6 +94,8 @@ public class Config {
             defaultShopLocColor = defaultConfig.getString("default-shop-loc-color");
 
             moderateDirectory = defaultConfig.getBoolean("moderate-directory");
+
+            filterAlternatives = defaultConfig.getBoolean("filter-alternatives-list");
 
             shopDetailsLengthLimit = defaultConfig.getInt("shop-details-length-limit",-1);
 
@@ -214,6 +220,10 @@ public class Config {
 
     public String getCustomApprovalMessage() {
         return customApprovalMessage;
+    }
+
+    public boolean filterAlternatives() {
+        return filterAlternatives;
     }
 
     public boolean bstatsEnabled() {
