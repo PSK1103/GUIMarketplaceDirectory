@@ -129,6 +129,8 @@ public class ItemEvents implements Listener {
     public final void checkForAlternatives(InventoryClickEvent itemCheckEvent) {
         if(itemCheckEvent.getInventory().getHolder() instanceof ShopInvHolder) {
             itemCheckEvent.setCancelled(true);
+            if(itemCheckEvent.getCurrentItem() == null || itemCheckEvent.getCurrentItem().getType() == Material.AIR)
+                return;
 
             ShopInvHolder holder = (ShopInvHolder)itemCheckEvent.getInventory().getHolder();
 

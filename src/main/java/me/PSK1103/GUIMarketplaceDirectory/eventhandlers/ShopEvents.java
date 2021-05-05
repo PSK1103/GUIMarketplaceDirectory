@@ -47,7 +47,7 @@ public class ShopEvents implements Listener {
                             return;
                         }
                         BookMeta bookMeta = (BookMeta) itemInHand.getItemMeta();
-                        if(bookMeta.getTitle().equalsIgnoreCase("[marketplace]") || bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]")) {
+                        if(bookMeta.getTitle() != null && (bookMeta.getTitle().equalsIgnoreCase("[marketplace]") || bookMeta.getTitle().equalsIgnoreCase("[shop init]") || bookMeta.getTitle().equalsIgnoreCase("[init shop]"))) {
                             if (bookMeta.getTitle().equalsIgnoreCase("[Marketplace]")) {
                                 Bukkit.getScheduler().runTask(plugin,()-> ShopEvents.this.plugin.gui.openShopDirectory(player));
                             }

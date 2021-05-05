@@ -74,7 +74,7 @@ public class GUI {
             nextPageMeta.setDisplayName("Next Page");
             nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             nextPage.setItemMeta(nextPageMeta);
-            shopDirectory.setItem(49,nextPage);
+            shopDirectory.setItem(50,nextPage);
             ItemStack prevPage = new ItemStack(Material.BARRIER);
             ItemMeta prevPageMeta = prevPage.getItemMeta();
             prevPageMeta.setDisplayName("Previous Page");
@@ -113,14 +113,13 @@ public class GUI {
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         back.setItemMeta(meta);
         shopInventory.setItem(Math.min(9*(inv.size()/9),45) + 8,back);
-        player.openInventory(shopInventory);
         if(inv.size()>45) {
             ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
             ItemMeta nextPageMeta = nextPage.getItemMeta();
             nextPageMeta.setDisplayName("Next Page");
             nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             nextPage.setItemMeta(nextPageMeta);
-            shopInventory.setItem(49,nextPage);
+            shopInventory.setItem(50,nextPage);
             ItemStack prevPage = new ItemStack(Material.BARRIER);
             ItemMeta prevPageMeta = prevPage.getItemMeta();
             prevPageMeta.setDisplayName("Previous Page");
@@ -133,6 +132,7 @@ public class GUI {
             pageNum.setItemMeta(pageNumMeta);
             shopInventory.setItem(45,pageNum);
         }
+        player.openInventory(shopInventory);
     }
 
     public void nextInvPage(Player player, int currPage) {
@@ -150,7 +150,7 @@ public class GUI {
         nextPageMeta.setDisplayName("Next Page");
         nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         nextPage.setItemMeta(nextPageMeta);
-        nextPageInv.setItem(49,nextPage);
+        nextPageInv.setItem(50,nextPage);
         ItemStack prevPage = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
         ItemMeta prevPageMeta = prevPage.getItemMeta();
         prevPageMeta.setDisplayName("Previous Page");
@@ -162,6 +162,12 @@ public class GUI {
         pageNumMeta.setDisplayName("Page " + (currPage+1));
         pageNum.setItemMeta(pageNumMeta);
         nextPageInv.setItem(45,pageNum);
+        ItemStack back = new ItemStack(Material.ARROW);
+        ItemMeta meta = back.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Go Back");
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        back.setItemMeta(meta);
+        nextPageInv.setItem(53,back);
         player.updateInventory();
     }
 
@@ -180,7 +186,7 @@ public class GUI {
         nextPageMeta.setDisplayName("Next Page");
         nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         nextPage.setItemMeta(nextPageMeta);
-        prevPageInv.setItem(49,nextPage);
+        prevPageInv.setItem(50,nextPage);
         ItemStack prevPage = currPage > 0 ? new ItemStack(Material.ORANGE_STAINED_GLASS_PANE) : new ItemStack(Material.BARRIER);
         ItemMeta prevPageMeta = prevPage.getItemMeta();
         prevPageMeta.setDisplayName("Previous Page");
@@ -192,6 +198,12 @@ public class GUI {
         pageNumMeta.setDisplayName("Page " + (currPage+1));
         pageNum.setItemMeta(pageNumMeta);
         prevPageInv.setItem(45,pageNum);
+        ItemStack back = new ItemStack(Material.ARROW);
+        ItemMeta meta = back.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Go Back");
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        back.setItemMeta(meta);
+        prevPageInv.setItem(53,back);
         player.updateInventory();
     }
 
@@ -228,7 +240,7 @@ public class GUI {
         nextPageMeta.setDisplayName("Next Page");
         nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         nextPage.setItemMeta(nextPageMeta);
-        nextPageInv.setItem(49,nextPage);
+        nextPageInv.setItem(50,nextPage);
         ItemStack prevPage = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
         ItemMeta prevPageMeta = prevPage.getItemMeta();
         prevPageMeta.setDisplayName("Previous Page");
@@ -277,7 +289,7 @@ public class GUI {
         nextPageMeta.setDisplayName("Next Page");
         nextPageMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         nextPage.setItemMeta(nextPageMeta);
-        prevPageInv.setItem(49,nextPage);
+        prevPageInv.setItem(50,nextPage);
         ItemStack prevPage = currPage > 0 ? new ItemStack(Material.ORANGE_STAINED_GLASS_PANE) : new ItemStack(Material.BARRIER);
         ItemMeta prevPageMeta = prevPage.getItemMeta();
         prevPageMeta.setDisplayName("Previous Page");
