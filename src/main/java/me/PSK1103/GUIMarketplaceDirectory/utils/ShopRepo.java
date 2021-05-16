@@ -752,9 +752,9 @@ public class ShopRepo {
 
                     for (int i = 0; i < 27; i++) {
                         ItemStack itemStack1 = shulker.getSnapshotInventory().getItem(i);
-                        String n = itemStack1.getType().getKey().getKey().toUpperCase(Locale.ROOT);
                         if (itemStack1 == null || itemStack1.getType() == Material.AIR)
                             continue;
+                        String n = itemStack1.getType().getKey().getKey().toUpperCase(Locale.ROOT);
 
                         Map<String, Object> content = new HashMap<>();
                         content.put("name", itemStack1.getType().getKey().getKey().toUpperCase());
@@ -893,7 +893,7 @@ public class ShopRepo {
             data.put("extended", potionType.isExtended());
             item.extraInfo = data;
             item.customType = "tippedArrow";
-        } else if (name.contains("BANNER")) {
+        } else if (name.endsWith("BANNER")) {
             BannerMeta bannerMeta = (BannerMeta) itemStack.getItemMeta();
             List<Object> patterns = new ArrayList<>();
             bannerMeta.getPatterns().forEach(pattern -> {

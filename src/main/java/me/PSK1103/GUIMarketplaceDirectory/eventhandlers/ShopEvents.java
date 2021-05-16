@@ -210,7 +210,7 @@ public class ShopEvents implements Listener {
 
             int currPage = 1;
 
-            if(shopSelectEvent.getRawSlot() > 44 && (shopSelectEvent.getInventory().getItem(46) == null || shopSelectEvent.getInventory().getItem(46).getType() == Material.AIR) && (shopSelectEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE || shopSelectEvent.getCurrentItem().getType() == Material.ORANGE_STAINED_GLASS_PANE)) {
+            if(shopSelectEvent.getRawSlot() > 44 && holder.isPaged()) {
                 if(shopSelectEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
                     currPage = Integer.parseInt(shopSelectEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
                     plugin.gui.nextPage(((Player) shopSelectEvent.getWhoClicked()),currPage);

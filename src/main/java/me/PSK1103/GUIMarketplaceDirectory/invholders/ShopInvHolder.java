@@ -14,6 +14,7 @@ public class ShopInvHolder implements InventoryHolder {
     List<Map<String,String>> shops;
     List<ItemStack> items;
     final int type;
+    boolean paged;
     @Override
     public @NotNull Inventory getInventory() {
         return null;
@@ -29,6 +30,7 @@ public class ShopInvHolder implements InventoryHolder {
         this.type = 0;
         this.item = null;
         shops = null;
+        paged = false;
     }
 
     public ShopInvHolder(String key,int type,List<ItemStack> items) {
@@ -38,6 +40,7 @@ public class ShopInvHolder implements InventoryHolder {
         this.items = items;
         this.item = null;
         shops = null;
+        paged = false;
     }
 
     public ShopInvHolder(String key, ItemStack item, int type) {
@@ -45,6 +48,7 @@ public class ShopInvHolder implements InventoryHolder {
         this.item = item;
         this.type = type;
         shops = null;
+        paged = false;
     }
 
     public ShopInvHolder setShops(List<Map<String,String>> shops) {
@@ -66,5 +70,13 @@ public class ShopInvHolder implements InventoryHolder {
 
     public List<ItemStack> getInv() {
         return items;
+    }
+
+    public void setPaged() {
+        this.paged = true;
+    }
+
+    public boolean isPaged() {
+        return paged;
     }
 }

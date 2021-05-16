@@ -69,6 +69,7 @@ public class GUI {
         }
 
         if(shops.size() > 54) {
+            ((MarketplaceBookHolder) shopDirectory.getHolder()).setPaged();
             ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
             ItemMeta nextPageMeta = nextPage.getItemMeta();
             nextPageMeta.setDisplayName("Next Page");
@@ -114,6 +115,7 @@ public class GUI {
         back.setItemMeta(meta);
         shopInventory.setItem(Math.min(9*(inv.size()/9),45) + 8,back);
         if(inv.size()>45) {
+            ((ShopInvHolder) shopInventory.getHolder()).setPaged();
             ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
             ItemMeta nextPageMeta = nextPage.getItemMeta();
             nextPageMeta.setDisplayName("Next Page");
@@ -214,7 +216,13 @@ public class GUI {
         int type = holder.getType();
         nextPageInv.clear();
         for(int i=0;i<Math.min(shops.size(),(currPage+1)*45)-currPage*45;i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(shops.get(i+currPage*45).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") +  shops.get(i+currPage*45).get("name")));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i+currPage*45).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") +  shops.get(i+currPage*45).get("desc")),30)));
@@ -263,7 +271,13 @@ public class GUI {
         int type = holder.getType();
         prevPageInv.clear();
         for(int i=0;i < 45;i++) {
-            ItemStack shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            ItemStack shopItem;
+            try {
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+            }
+            catch (Exception e) {
+                shopItem = new ItemStack(Material.WRITTEN_BOOK);
+            }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(shops.get(i+currPage*45).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") +  shops.get(i+currPage*45).get("name")));
             List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i+currPage*45).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i+currPage*45).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") +  shops.get(i+currPage*45).get("desc")),30)));
@@ -416,6 +430,7 @@ public class GUI {
         }
 
         if(shops.size() > 54) {
+            ((MarketplaceBookHolder) shopDirectory.getHolder()).setPaged();
             ItemStack nextPage = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
             ItemMeta nextPageMeta = nextPage.getItemMeta();
             nextPageMeta.setDisplayName("Next Page");
