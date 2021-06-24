@@ -3,12 +3,12 @@ package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 import io.netty.channel.*;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
-import net.minecraft.server.v1_16_R3.PacketPlayOutOpenBook;
+import net.minecraft.network.protocol.game.PacketPlayOutOpenBook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,7 +30,7 @@ public class ShopEvents implements Listener {
     class PacketHandler {
 
         public void removePLayer(Player player) {
-            Channel channel = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel;
+            Channel channel = ((CraftPlayer) player).getHandle().b.a.k;
             channel.eventLoop().submit(() -> {
                 channel.pipeline().remove(player.getName());
             });
@@ -76,7 +76,7 @@ public class ShopEvents implements Listener {
                 }
             };
 
-            ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel.pipeline();
+            ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.a.k.pipeline();
             if(pipeline.get(player.getName()) == null)
                 pipeline.addBefore("packet_handler",player.getName(),channelDuplexHandler);
         }

@@ -218,7 +218,7 @@ public class GUI {
         for(int i=0;i<Math.min(shops.size(),(currPage+1)*45)-currPage*45;i++) {
             ItemStack shopItem;
             try {
-                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i+currPage*45).get("displayItem")));
             }
             catch (Exception e) {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
@@ -273,7 +273,7 @@ public class GUI {
         for(int i=0;i < 45;i++) {
             ItemStack shopItem;
             try {
-                shopItem = new ItemStack(Material.getMaterial(shops.get(i).get("displayItem")));
+                shopItem = new ItemStack(Material.getMaterial(shops.get(i+currPage*45).get("displayItem")));
             }
             catch (Exception e) {
                 shopItem = new ItemStack(Material.WRITTEN_BOOK);
@@ -409,7 +409,7 @@ public class GUI {
             }
             ItemMeta shopMeta = shopItem.getItemMeta();
             shopMeta.setDisplayName(shops.get(i).get("name").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("name")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("name") + shops.get(i).get("name")));
-            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("desc")) : ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("desc") + shops.get(i).get("desc")),30)));
+            List<String> lore = new ArrayList<>(Arrays.asList(ChatPaginator.wordWrap(shops.get(i).get("desc").contains("&") ? ChatColor.translateAlternateColorCodes('&',shops.get(i).get("desc")) : (colors.get("desc") + shops.get(i).get("desc")),30)));
             lore.add(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("loc") + shops.get(i).get("loc")));
             lore.add(0,ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,colors.get("owner") + shops.get(i).get("owners")));
             if(type == 1) {
