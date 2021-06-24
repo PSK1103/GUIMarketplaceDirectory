@@ -9,6 +9,8 @@ import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.banner.Pattern;
@@ -51,7 +53,7 @@ class ItemList {
         this.extraInfo = new HashMap<>(0);
         item = new ItemStack(Material.getMaterial(itemName));
         ItemMeta meta = item.getItemMeta();
-        List<String> lore = new ArrayList<>(2);
+        List<Component> lore = new ArrayList<>(2);
         String qtyString = "";
         String[] parts = qty.split(":");
         if (Integer.parseInt(parts[0]) > 0)
@@ -63,8 +65,8 @@ class ItemList {
 
         else return;
 
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s")));
-        meta.setLore(lore);
+        lore.add(Component.text(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s"))));
+        meta.lore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, /*ItemFlag.HIDE_ENCHANTS,*/ ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
     }
@@ -76,7 +78,7 @@ class ItemList {
         item = new ItemStack(Material.getMaterial(itemName));
         item.setItemMeta(meta);
         if (meta.hasDisplayName())
-            this.customName = meta.getDisplayName();
+            this.customName = ((TextComponent) meta.displayName()).content();
         qty = "";
         price = 0;
     }
@@ -149,7 +151,7 @@ class ItemList {
                     ItemStack itemStack = new ItemStack(Material.valueOf(content.get("name").toString()), Double.valueOf(content.get("quantity").toString()).intValue());
                     if (content.containsKey("customName")) {
                         ItemMeta meta = itemStack.getItemMeta();
-                        meta.setDisplayName(content.get("customName").toString());
+                        meta.displayName(Component.text(content.get("customName").toString()));
                     }
                     if (content.containsKey("customType")) {
                         getCustomItem(itemStack, content.get("customType").toString(), (Map<String, Object>) content.get("extraInfo"));
@@ -185,7 +187,7 @@ class ItemList {
     public void setCustomName(String customName) {
         this.customName = customName;
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(customName);
+        meta.displayName(Component.text(customName));
         item.setItemMeta(meta);
     }
 
@@ -202,7 +204,7 @@ class ItemList {
     public void setPrice(int price) {
         this.price = price;
         ItemMeta meta = item.getItemMeta();
-        List<String> lore = new ArrayList<>(2);
+        List<String> l = new ArrayList<>(2);
         String qtyString = "";
         String[] parts = qty.split(":");
         if (Integer.parseInt(parts[0]) > 0)
@@ -216,18 +218,20 @@ class ItemList {
 
         if(price < 0) {
             this.price = -1;
-            lore.add(ChatColor.GRAY + "Price hidden or variable");
+            l.add(ChatColor.GRAY + "Price hidden or variable");
         }
         else if(price == 0) {
-            lore.add(ChatColor.GREEN + "Free!");
+            l.add(ChatColor.GREEN + "Free!");
         }
         else {
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
+            l.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
         }
         /*List<String> oldLore = meta.getLore();
         if(oldLore!=null)
-            lore.addAll(oldLore);*/
-        meta.setLore(lore);
+            l.addAll(oldLore);*/
+        List<Component> lore = new ArrayList<>();
+        l.forEach(s -> lore.add(Component.text(s)));
+        meta.lore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, /*ItemFlag.HIDE_ENCHANTS,*/ ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
     }
@@ -510,6 +514,8 @@ public class ShopRepo {
     }
 
     public void saveShops() {
+        if(shops == null)
+            return;
         Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
             JSONParser parser = new JSONParser();
             try {
@@ -538,7 +544,7 @@ public class ShopRepo {
                         item.put("price", Integer.valueOf(itemList.price).toString());
                         item.put("qty", itemList.qty);
                         if (itemList.item.getItemMeta().hasDisplayName())
-                            item.put("customName", itemList.item.getItemMeta().getDisplayName());
+                            item.put("customName", ((TextComponent) itemList.item.getItemMeta().displayName()).content());
                         if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
                             item.put("extraInfo", itemList.extraInfo);
                         }
@@ -573,7 +579,7 @@ public class ShopRepo {
                         item.put("price", Integer.valueOf(itemList.price).toString());
                         item.put("qty", itemList.qty);
                         if (itemList.item.getItemMeta().hasDisplayName()) {
-                            item.put("customName", itemList.item.getItemMeta().getDisplayName());
+                            item.put("customName", ((TextComponent) itemList.item.getItemMeta().displayName()).content());
                         }
                         if (itemList.extraInfo != null && itemList.extraInfo.size() > 0) {
                             item.put("extraInfo", itemList.extraInfo);
@@ -1067,9 +1073,9 @@ public class ShopRepo {
         shop.getInv().forEach(itemList -> {
             ItemStack item = itemList.item.clone();
             ItemMeta meta = item.getItemMeta();
-            List<String> lore = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
-            lore.add("Right click to find a better deal");
-            meta.setLore(lore);
+            List<Component> lore = meta.lore() == null ? new ArrayList<>() : meta.lore();
+            lore.add(Component.text("Right click to find a better deal"));
+            meta.lore(lore);
             item.setItemMeta(meta);
             inv.add(item);
 
@@ -1116,7 +1122,7 @@ public class ShopRepo {
                         val /= itemList.price;
 
                         if (val > finalValue) {
-                            player.sendMessage(ChatColor.GOLD + shop.getName() + ChatColor.WHITE + " has a better deal: " + itemList.getItem().getLore().get(0));
+                            player.sendMessage(ChatColor.GOLD + shop.getName() + ChatColor.WHITE + " has a better deal: " + ((TextComponent) itemList.getItem().lore().get(0)).content());
                             found[0] = true;
                         }
                     }
@@ -1169,7 +1175,7 @@ public class ShopRepo {
 
     public void removeItem(String key, ItemStack item) {
         Shop shop = shops.getOrDefault(key, pendingShops.get(key));
-        shop.setInv(shop.getInv().stream().filter(itemList -> itemList.getItem().getType() != item.getType() || !item.getItemMeta().getLore().get(0).equals(itemList.item.getItemMeta().getLore().get(0))).collect(Collectors.toList()));
+        shop.setInv(shop.getInv().stream().filter(itemList -> itemList.getItem().getType() != item.getType() || !((TextComponent) item.getItemMeta().lore().get(0)).content().equals(((TextComponent) itemList.item.getItemMeta().lore().get(0)).content())).collect(Collectors.toList()));
     }
 
     public List<Map<String, String>> getRefinedShopsByPlayer(String searchKey) {
@@ -1205,10 +1211,10 @@ public class ShopRepo {
                 if (itemList.name.replace('_', ' ').toLowerCase().trim().contains(searchKey.toLowerCase().trim())) {
                     ItemStack itemToAdd = itemList.item.clone();
                     ItemMeta meta = itemToAdd.getItemMeta();
-                    List<String> lore = meta.getLore();
-                    lore.add(ChatColor.GREEN + "From " + shop.getName());
-                    lore.add(ChatColor.YELLOW + "Right-click to view this shop");
-                    meta.setLore(lore);
+                    List<Component> lore = meta.lore();
+                    lore.add(Component.text(ChatColor.GREEN + "From " + shop.getName()));
+                    lore.add(Component.text(ChatColor.YELLOW + "Right-click to view this shop"));
+                    meta.lore(lore);
                     itemToAdd.setItemMeta(meta);
                     items.add(itemToAdd);
                     Map<String,String> shopData = new HashMap<>();
@@ -1218,10 +1224,10 @@ public class ShopRepo {
                 } else if (itemList.customName.length() > 0 && itemList.customName.toLowerCase().trim().contains(searchKey.toLowerCase().trim())) {
                     ItemStack itemToAdd = itemList.item.clone();
                     ItemMeta meta = itemToAdd.getItemMeta();
-                    List<String> lore = meta.getLore();
-                    lore.add(ChatColor.GREEN + "From " + shop.getName());
-                    lore.add(ChatColor.YELLOW + "Right-click to view this shop");
-                    meta.setLore(lore);
+                    List<Component> lore = meta.lore();
+                    lore.add(Component.text(ChatColor.GREEN + "From " + shop.getName()));
+                    lore.add(Component.text(ChatColor.YELLOW + "Right-click to view this shop"));
+                    meta.lore(lore);
                     itemToAdd.setItemMeta(meta);
                     items.add(itemToAdd);
                     Map<String,String> shopData = new HashMap<>();
