@@ -1,8 +1,10 @@
 package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 
 import io.netty.channel.*;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
+import net.kyori.adventure.text.TextComponent;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenBook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -212,11 +214,11 @@ public class ShopEvents implements Listener {
 
             if(shopSelectEvent.getRawSlot() > 44 && holder.isPaged()) {
                 if(shopSelectEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
-                    currPage = Integer.parseInt(shopSelectEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    currPage = Integer.parseInt(((TextComponent) shopSelectEvent.getInventory().getItem(45).getItemMeta().displayName()).content().substring(5));
                     plugin.gui.nextPage(((Player) shopSelectEvent.getWhoClicked()),currPage);
                 }
                 if(shopSelectEvent.getCurrentItem().getType() == Material.ORANGE_STAINED_GLASS_PANE) {
-                    currPage = Integer.parseInt(shopSelectEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    currPage = Integer.parseInt(((TextComponent) shopSelectEvent.getInventory().getItem(45).getItemMeta().displayName()).content().substring(5));
                     plugin.gui.prevPage(((Player) shopSelectEvent.getWhoClicked()),currPage);
                 }
                 return;
@@ -224,7 +226,7 @@ public class ShopEvents implements Listener {
 
             if(shopSelectEvent.getInventory().getSize() == 54) {
                 if(shopSelectEvent.getInventory().getItem(45).getType() == Material.LIGHT_GRAY_STAINED_GLASS_PANE && (shopSelectEvent.getInventory().getItem(46) == null || shopSelectEvent.getInventory().getItem(46).getType() == Material.AIR)) {
-                    currPage = Integer.parseInt(shopSelectEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    currPage = Integer.parseInt(((TextComponent) shopSelectEvent.getInventory().getItem(45).getItemMeta().displayName()).content().substring(5));
                 }
             }
             if(holder.getType() == 0) {
@@ -306,7 +308,7 @@ public class ShopEvents implements Listener {
     }
 
     @EventHandler
-    public final void ownerAddEvent(AsyncPlayerChatEvent chatEvent) {
+    public final void ownerAddEvent(AsyncChatEvent chatEvent) {
 
         if(plugin.getShopRepo().getIsUserAddingOwner(chatEvent.getPlayer().getUniqueId().toString())) {
             chatEvent.setCancelled(true);
@@ -319,10 +321,10 @@ public class ShopEvents implements Listener {
             int editType = plugin.getShopRepo().getEditType(uuid);
 
             if (editType == 2) {
-                if (chatEvent.getMessage().equalsIgnoreCase("Y") || chatEvent.getMessage().equalsIgnoreCase("yes")) {
+                if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("Y") || ((TextComponent) chatEvent.message()).content().equalsIgnoreCase("yes")) {
                     plugin.getShopRepo().addOwner(uuid, chatEvent.getPlayer());
                     chatEvent.getPlayer().sendMessage(ChatColor.GOLD + "Shop initialised successfully!");
-                } else if (chatEvent.getMessage().equalsIgnoreCase("n") || chatEvent.getMessage().equalsIgnoreCase("no")) {
+                } else if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("n") || ((TextComponent) chatEvent.message()).content().equalsIgnoreCase("no")) {
                     plugin.getShopRepo().initShopOwnerAddition(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Enter owner's name (type nil to cancel)");
                 } else {
@@ -332,12 +334,12 @@ public class ShopEvents implements Listener {
                 }
             } else if (editType == 1) {
 
-                if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
+                if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled adding another owner");
                     return;
                 }
-                String playerName = chatEvent.getMessage();
+                String playerName = ((TextComponent) chatEvent.message()).content();
 
                 List<OfflinePlayer> players;
                 if(plugin.getCustomConfig().addingOfflinePlayerAllowed())
@@ -360,13 +362,13 @@ public class ShopEvents implements Listener {
                     chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getName() + " successfully added as owner");
                 }
             } else if(editType == 3) {
-                if (chatEvent.getMessage().equalsIgnoreCase("nil")) {
+                if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled setting display item");
                     return;
                 }
 
-                String materialName = chatEvent.getMessage().trim().replace(' ','_').toUpperCase(Locale.ROOT);
+                String materialName = ((TextComponent) chatEvent.message()).content().trim().replace(' ','_').toUpperCase(Locale.ROOT);
                 Material trial = Material.getMaterial(materialName);
                 if(trial != null) {
                     chatEvent.getPlayer().sendMessage(ChatColor.GREEN + "Setting shop display item to " + ChatColor.GOLD + trial.getKey().getKey());
@@ -382,7 +384,7 @@ public class ShopEvents implements Listener {
         }
         if(plugin.getShopRepo().isUserRejectingShop(chatEvent.getPlayer().getUniqueId().toString())) {
             chatEvent.setCancelled(true);
-            String message = chatEvent.getMessage();
+            String message = ((TextComponent) chatEvent.message()).content();
             if(message.equalsIgnoreCase("y") || message.equalsIgnoreCase("yes")) {
                 plugin.getShopRepo().rejectShop(chatEvent.getPlayer().getUniqueId().toString());
                 chatEvent.getPlayer().sendMessage(ChatColor.GREEN + "Rejected shop successfully");
@@ -400,7 +402,7 @@ public class ShopEvents implements Listener {
 
         if(plugin.getShopRepo().isUserRemovingShop(chatEvent.getPlayer().getUniqueId().toString())) {
             chatEvent.setCancelled(true);
-            String message = chatEvent.getMessage();
+            String message = ((TextComponent) chatEvent.message()).content();
             if(message.equalsIgnoreCase("y") || message.equalsIgnoreCase("yes")) {
                 plugin.getShopRepo().removeShop(chatEvent.getPlayer().getUniqueId().toString());
                 chatEvent.getPlayer().sendMessage(ChatColor.GREEN + "Removed shop successfully");

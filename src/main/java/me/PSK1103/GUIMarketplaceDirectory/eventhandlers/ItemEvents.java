@@ -204,7 +204,7 @@ public class ItemEvents implements Listener {
                     }
                 }
                 else if(type == 5) {
-                    if(itemCheckEvent.getRawSlot() == 11) {
+                    if(itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize()-7) {
                         player.closeInventory();
                         ItemStack item = holder.getItem();
                         player.sendMessage(ChatColor.GREEN + "Set quantity (in format shulker:stack:num)");
@@ -218,14 +218,14 @@ public class ItemEvents implements Listener {
                         }
                     }
 
-                    else if(itemCheckEvent.getRawSlot() == 15) {
+                    else if(itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize()-3) {
                         player.closeInventory();
                         plugin.getShopRepo().removeMatchingItems(holder.getKey(),holder.getItem().getType().getKey().getKey().toUpperCase());
                         player.closeInventory();
                         player.sendMessage(ChatColor.YELLOW + "All matching items removed");
                     }
 
-                    else if(itemCheckEvent.getRawSlot()<9 && itemCheckEvent.getCurrentItem()!=null && itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem().getType()!= Material.AIR) {
+                    else if(itemCheckEvent.getRawSlot()<itemCheckEvent.getInventory().getSize()-9 && itemCheckEvent.getCurrentItem()!=null && itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem().getType()!= Material.AIR) {
                         plugin.getShopRepo().removeItem(holder.getKey(), itemCheckEvent.getCurrentItem());
                         List<ItemStack> matchingItems = plugin.getShopRepo().getMatchingItems(holder.getKey(), itemCheckEvent.getCurrentItem().getType().getKey().getKey().toUpperCase());
                         if(matchingItems.size() == 0)

@@ -65,7 +65,17 @@ class ItemList {
 
         else return;
 
-        lore.add(Component.text(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s"))));
+        if(price < 0) {
+            this.price = -1;
+            lore.add(Component.text(ChatColor.GRAY + "Price hidden or variable"));
+        }
+        else if(price == 0) {
+            lore.add(Component.text(ChatColor.GREEN + "Free!"));
+        }
+        else {
+            lore.add(Component.text(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s"))));
+        }
+
         meta.lore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, /*ItemFlag.HIDE_ENCHANTS,*/ ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
@@ -224,7 +234,7 @@ class ItemList {
             l.add(ChatColor.GREEN + "Free!");
         }
         else {
-            l.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamonds"));
+            l.add(ChatColor.translateAlternateColorCodes('&', "&6" + qtyString + " &ffor &3" + price + " diamond" + (price == 1 ? "" : "s")));
         }
         /*List<String> oldLore = meta.getLore();
         if(oldLore!=null)
@@ -1211,8 +1221,9 @@ public class ShopRepo {
                 if (itemList.name.replace('_', ' ').toLowerCase().trim().contains(searchKey.toLowerCase().trim())) {
                     ItemStack itemToAdd = itemList.item.clone();
                     ItemMeta meta = itemToAdd.getItemMeta();
-                    List<Component> lore = meta.lore();
+                    List<Component> lore = meta.lore() != null ? meta.lore() : new ArrayList<>();
                     lore.add(Component.text(ChatColor.GREEN + "From " + shop.getName()));
+                    lore.add(Component.text(ChatColor.translateAlternateColorCodes(ChatColor.COLOR_CHAR,plugin.getCustomConfig().getDefaultShopLocColor() + shop.getLoc())));
                     lore.add(Component.text(ChatColor.YELLOW + "Right-click to view this shop"));
                     meta.lore(lore);
                     itemToAdd.setItemMeta(meta);
@@ -1224,7 +1235,7 @@ public class ShopRepo {
                 } else if (itemList.customName.length() > 0 && itemList.customName.toLowerCase().trim().contains(searchKey.toLowerCase().trim())) {
                     ItemStack itemToAdd = itemList.item.clone();
                     ItemMeta meta = itemToAdd.getItemMeta();
-                    List<Component> lore = meta.lore();
+                    List<Component> lore = meta.lore() != null ? meta.lore() : new ArrayList<>();
                     lore.add(Component.text(ChatColor.GREEN + "From " + shop.getName()));
                     lore.add(Component.text(ChatColor.YELLOW + "Right-click to view this shop"));
                     meta.lore(lore);

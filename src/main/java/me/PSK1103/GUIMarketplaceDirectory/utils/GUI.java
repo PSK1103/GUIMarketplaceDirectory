@@ -492,8 +492,8 @@ public class GUI {
     }
 
     public void openItemAddMenu(Player player, String key, List<ItemStack> matchingItems, ItemStack itemToAdd) {
-        Inventory itemAddMenuInv = Bukkit.createInventory(new ShopInvHolder(key,itemToAdd.clone(),5),18,Component.text("Adding Item..."));
-        for(int i = 0;i<Math.min(matchingItems.size(),9);i++) {
+        Inventory itemAddMenuInv = Bukkit.createInventory(new ShopInvHolder(key,itemToAdd.clone(),5),Math.min(54,9 + 9*(matchingItems.size()/9 + matchingItems.size()%9 == 0 ? 0 : 1)),Component.text("Adding Item..."));
+        for(int i = 0;i<Math.min(matchingItems.size(),45);i++) {
             ItemStack iTA = matchingItems.get(i).clone();
             ItemMeta meta = iTA.getItemMeta();
             List<Component> lore = meta.lore();
@@ -508,13 +508,13 @@ public class GUI {
         ItemMeta addItemMeta = addItem.getItemMeta();
         addItemMeta.displayName(Component.text(ChatColor.GREEN + "" + ChatColor.ITALIC + "Add item"));
         addItem.setItemMeta(addItemMeta);
-        itemAddMenuInv.setItem(11,addItem);
+        itemAddMenuInv.setItem(itemAddMenuInv.getSize()-7,addItem);
 
         ItemStack removeAllItems = new ItemStack(Material.FLINT_AND_STEEL);
         ItemMeta removeAllItemsMeta = removeAllItems.getItemMeta();
         removeAllItemsMeta.displayName(Component.text(ChatColor.RED + "" + ChatColor.ITALIC + "Remove all items"));
         removeAllItems.setItemMeta(removeAllItemsMeta);
-        itemAddMenuInv.setItem(15,removeAllItems);
+        itemAddMenuInv.setItem(itemAddMenuInv.getSize()-3,removeAllItems);
 
         player.openInventory(itemAddMenuInv);
     }
