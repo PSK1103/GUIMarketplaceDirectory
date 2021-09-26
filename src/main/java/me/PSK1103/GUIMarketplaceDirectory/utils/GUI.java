@@ -17,9 +17,9 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.ChatPaginator;
-import org.slf4j.Logger;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class GUI {
     private final GUIMarketplaceDirectory plugin;
@@ -28,7 +28,7 @@ public class GUI {
 
     public GUI(GUIMarketplaceDirectory plugin) {
         this.plugin = plugin;
-        logger = plugin.getSLF4JLogger();
+        logger = plugin.getLogger();
         colors = new HashMap<>();
         colors.put("name",plugin.getCustomConfig().getDefaultShopNameColor());
         colors.put("desc",plugin.getCustomConfig().getDefaultShopDescColor());
@@ -95,8 +95,11 @@ public class GUI {
 
     public void openShopInventory(Player player, String key,String name,int type) {
 
-        List<ItemStack> inv = plugin.getShopRepo().getShopInv(key);
-        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(key,type,inv),Math.min(9*(inv.size()/9),45) + 9, Component.text(name));
+        List<Object> res = plugin.getShopRepo().getShopInv(key);
+        List<ItemStack> inv = (List<ItemStack>) res.get(0);
+        List<Integer> itemIds = (List<Integer>) res.get(1);
+
+        Inventory shopInventory = Bukkit.createInventory(new ShopInvHolder(key,type,inv, itemIds),Math.min(9*(inv.size()/9),45) + 9, Component.text(name));
         for(int i=0;i<Math.min(inv.size(),45);i++) {
             shopInventory.setItem(i,inv.get(i));
         }
@@ -395,7 +398,7 @@ public class GUI {
             return;
         }
 
-        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder("",6,null).setShops(shops),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54), Component.text("Search results"));
+        Inventory refinedItemInv = Bukkit.createInventory(new ShopInvHolder("",6,null, null).setShops(shops),Math.min(9*(refinedItems.size()/9 + ((refinedItems.size()%9) == 0 ? 0 : 1)),54), Component.text("Search results"));
 
         for(int i=0;i<Math.min(refinedItems.size(),54);i++) {
             refinedItemInv.setItem(i,refinedItems.get(i));
@@ -433,6 +436,12 @@ public class GUI {
             else if(type == 3) {
                 lore.add(Component.text(ChatColor.AQUA + "Right click to recover"));
             }
+            else if(type == 4) {
+                lore.add(Component.text(ChatColor.AQUA + "Right click to check activity"));
+            }
+            else if(type == 5) {
+                lore.add(Component.text(ChatColor.AQUA + "Right click to set lookup radius"));
+            }
             shopMeta.lore(lore);
             shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             shopItem.setItemMeta(shopMeta);
@@ -469,7 +478,7 @@ public class GUI {
 
     public void openShopEditMenu(Player player, String key) {
         String name = plugin.getShopRepo().getShopName(key);
-        Inventory shopEditMenuInv = Bukkit.createInventory(new ShopInvHolder(key,4,null),9, Component.text(name));
+        Inventory shopEditMenuInv = Bukkit.createInventory(new ShopInvHolder(key,4,null, null),9, Component.text(name));
         ItemStack addOwner = new ItemStack(Material.BEACON);
         ItemMeta addOwnerMeta = addOwner.getItemMeta();
         addOwnerMeta.displayName(Component.text(ChatColor.GOLD + "" + ChatColor.ITALIC + "Add owner"));

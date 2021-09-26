@@ -2,14 +2,14 @@ package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 
 import io.netty.channel.*;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import me.PSK1103.GUIMarketplaceDirectory.database.SQLDatabase;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
+import me.PSK1103.GUIMarketplaceDirectory.shoprepos.mysql.MySQLShopRepo;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenBook;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -137,8 +137,6 @@ public class ShopEvents implements Listener {
             name = shopInitMatcher.group(1);
             d = shopInitMatcher.group(2);
 
-            System.out.println(shopInitMatcher.group(3));
-
             if(shopInitMatcher.group(3) != null)
                 displayItem = shopInitMatcher.group(3);
 
@@ -149,19 +147,26 @@ public class ShopEvents implements Listener {
                 return;
             }
 
-            String key = "" + System.currentTimeMillis() + editBookEvent.getPlayer().getUniqueId();
             String loc = editBookEvent.getPlayer().getLocation().getBlockX() + "," + editBookEvent.getPlayer().getLocation().getBlockZ();
-            meta.addPage(key);
-            meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
-            editBookEvent.setNewBookMeta(meta);
 
             Player player = editBookEvent.getPlayer();
 
             if(!plugin.getCustomConfig().multiOwnerEnabled()) {
-                plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), key, loc, displayItem);
+                String key = plugin.getShopRepo().addShopAsOwner(name, d, player.getName(), player.getUniqueId().toString(), loc, displayItem);
+                if (key == null) {
+                    player.sendMessage(Component.text(Color.RED + "An error occurred while adding shop"));
+                    editBookEvent.setCancelled(true);
+                    return;
+                }
+                meta.addPage(key);
+                meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
+                editBookEvent.setNewBookMeta(meta);
             }
             else {
-                plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), key, loc,displayItem);
+                String key = plugin.getShopRepo().addShop(name, d, player.getName(), player.getUniqueId().toString(), loc,displayItem);
+                meta.addPage(key);
+                meta.setDisplayName(name.contains("&") ? ChatColor.translateAlternateColorCodes('&',name) : (ChatColor.GOLD + name));
+                editBookEvent.setNewBookMeta(meta);
 
                 if(plugin.getCustomConfig().directoryModerationEnabled() && plugin.getCustomConfig().customApprovalMessageEnabled()) {
                     editBookEvent.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('§', plugin.getCustomConfig().getCustomApprovalMessage()));
@@ -189,6 +194,7 @@ public class ShopEvents implements Listener {
     public final void onJoin(PlayerJoinEvent e){
         try {
             handler.injectPlayer(e.getPlayer());
+            SQLDatabase.addPlayer(e.getPlayer().getUniqueId().toString(), e.getPlayer().getName());
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -250,7 +256,7 @@ public class ShopEvents implements Listener {
                     return;
                 }
                 else if(shopSelectEvent.isLeftClick()) {
-                    if(plugin.getShopRepo().isUserRejectingShop(shopSelectEvent.getWhoClicked().getUniqueId().toString())) {
+                    if(plugin.getShopRepo().isUserRejectingShop(shopSelectEvent.getWhoClicked().getUniqueId().toString()) || plugin.getShopRepo().isUserRemovingShop(shopSelectEvent.getWhoClicked().getUniqueId().toString())) {
                         shopSelectEvent.getWhoClicked().sendMessage(ChatColor.RED + "Confirm rejection of previous shop first!");
                         return;
                     }
@@ -297,11 +303,50 @@ public class ShopEvents implements Listener {
                 }
 
                 else {
-                    shopSelectEvent.setCancelled(true);
                     shopSelectEvent.getWhoClicked().closeInventory();
                     plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
                 }
 
+            }
+            else if (holder.getType() == 4) {
+                if(shopSelectEvent.isRightClick()) {
+                    int finalCurrPage = currPage;
+                    class LookupThread implements Runnable {
+                        @Override
+                        public void run() {
+                            plugin.getShopRepo().lookupShop((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(finalCurrPage - 1)).get("key"));
+                        }
+                    }
+                    new Thread(new LookupThread()).start();
+                    shopSelectEvent.getWhoClicked().closeInventory();
+                }
+                else {
+                    shopSelectEvent.getWhoClicked().closeInventory();
+                    plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
+                }
+            }
+            else if (holder.getType() == 5) {
+                if(shopSelectEvent.isRightClick()) {
+                    String uuid = shopSelectEvent.getWhoClicked().getUniqueId().toString();
+                    if(plugin.getShopRepo().isUserRejectingShop(uuid) || plugin.getShopRepo().isUserRemovingShop(uuid)) {
+                        shopSelectEvent.getWhoClicked().sendMessage(ChatColor.RED + "Confirm removal/rejection of previous shop first!");
+                        shopSelectEvent.getWhoClicked().closeInventory();
+                        return;
+                    }
+                    if(plugin.getShopRepo() instanceof MySQLShopRepo) {
+                        shopSelectEvent.getWhoClicked().sendMessage(ChatColor.GREEN + "Enter new lookup radius");
+                        ((MySQLShopRepo) plugin.getShopRepo()).startSettingLookupRadius(uuid, holder.getShops().get(shopSelectEvent.getRawSlot() + 45 * (currPage - 1)).get("key"));
+                    }
+                    else {
+                        shopSelectEvent.getWhoClicked().sendMessage(ChatColor.RED + "This feature only works when using a db and CoreProtect integration is on");
+                    }
+
+                    shopSelectEvent.getWhoClicked().closeInventory();
+                }
+                else {
+                    shopSelectEvent.getWhoClicked().closeInventory();
+                    plugin.gui.openShopInventory((Player) shopSelectEvent.getWhoClicked(), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("key"), holder.getShops().get(shopSelectEvent.getRawSlot() + 45*(currPage - 1)).get("name"),holder.getType());
+                }
             }
 
         }
@@ -328,11 +373,11 @@ public class ShopEvents implements Listener {
                     plugin.getShopRepo().initShopOwnerAddition(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Enter owner's name (type nil to cancel)");
                 } else {
-                    plugin.getShopRepo().stopInitOwner(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Didn't get proper response");
                     plugin.gui.sendConfirmationMessage(chatEvent.getPlayer(),"Are you the owner of this shop?");
                 }
-            } else if (editType == 1) {
+            }
+            else if (editType == 1 || editType == 5) {
 
                 if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
@@ -361,7 +406,8 @@ public class ShopEvents implements Listener {
                     plugin.getShopRepo().addOwner(uuid, players.get(0));
                     chatEvent.getPlayer().sendMessage(ChatColor.GOLD + players.get(0).getName() + " successfully added as owner");
                 }
-            } else if(editType == 3) {
+            }
+            else if(editType == 3) {
                 if (((TextComponent) chatEvent.message()).content().equalsIgnoreCase("nil")) {
                     plugin.getShopRepo().stopInitOwner(uuid);
                     chatEvent.getPlayer().sendMessage(ChatColor.GRAY + "Cancelled setting display item");
@@ -379,6 +425,30 @@ public class ShopEvents implements Listener {
                     chatEvent.getPlayer().sendMessage(ChatColor.YELLOW + "Enter display item name (material name only, nil to cancel)");
                     return;
                 }
+            }
+            else if (editType == 7) {
+                String rad = ((TextComponent) chatEvent.message()).content();
+                int radius;
+                try {
+                    radius = Integer.parseInt(rad);
+                    if (radius <= 0)
+                        throw new IllegalArgumentException("number less than 0");
+                }
+                catch (NumberFormatException e) {
+                    chatEvent.getPlayer().sendMessage(ChatColor.RED + "Enter a number");
+                    return;
+                }
+                catch (IllegalArgumentException e) {
+                    chatEvent.getPlayer().sendMessage(ChatColor.RED + "Enter a positive number");
+                    return;
+                }
+                if (!(plugin.getShopRepo() instanceof MySQLShopRepo)) {
+                    chatEvent.getPlayer().sendMessage(ChatColor.RED + "Cannot do this operation with JSON shop repo");
+                    return;
+                }
+                chatEvent.getPlayer().sendMessage("Setting lookup radius to " + ChatColor.AQUA + radius);
+                ((MySQLShopRepo) plugin.getShopRepo()).setLookupRadius(uuid, radius);
+
             }
             return;
         }

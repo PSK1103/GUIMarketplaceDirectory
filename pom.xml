@@ -6,7 +6,7 @@
 
     <groupId>me.PSK1103</groupId>
     <artifactId>GUIMarketplaceDirectory</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 
     <repositories>
         <repository>
@@ -21,6 +21,10 @@
         <repository>
             <id>dmulloy2-repo</id>
             <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
+        <repository>
+            <id>playpro-repo</id>
+            <url>https://maven.playpro.com</url>
         </repository>
     </repositories>
 
@@ -46,6 +50,17 @@
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
             <version>4.6.0</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>net.coreprotect</groupId>
+            <artifactId>coreprotect</artifactId>
+            <version>20.0</version>
+            <scope>provided</scope>
+        </dependency>-->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>2.7.4</version>
         </dependency>
     </dependencies>
 

@@ -13,6 +13,7 @@ public class ShopInvHolder implements InventoryHolder {
     final ItemStack item;
     List<Map<String,String>> shops;
     List<ItemStack> items;
+    List<Integer> itemIds;
     final int type;
     boolean paged;
     @Override
@@ -22,6 +23,9 @@ public class ShopInvHolder implements InventoryHolder {
 
     public String getKey() {
         return key;
+    }
+    public int getItemId(int pos) {
+        return itemIds.get(pos) == -1 ? pos : itemIds.get(pos);
     }
 
     public ShopInvHolder(String key) {
@@ -33,11 +37,12 @@ public class ShopInvHolder implements InventoryHolder {
         paged = false;
     }
 
-    public ShopInvHolder(String key,int type,List<ItemStack> items) {
+    public ShopInvHolder(String key,int type,List<ItemStack> items, List<Integer> itemIds) {
         super();
         this.key = key;
         this.type = type;
         this.items = items;
+        this.itemIds = itemIds;
         this.item = null;
         shops = null;
         paged = false;

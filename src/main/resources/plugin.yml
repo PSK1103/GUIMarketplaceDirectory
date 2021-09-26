@@ -2,11 +2,12 @@ main: me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory
 name: GUIMarketplaceDirectory
 author: PSK1103
 api-version: "1.14"
-version: 1.1.0
+version: 1.2.0
 description: gui marketplace directory
+softdepend: [CoreProtect]
+loadbefore: [CoreProtect]
 
 commands:
-
   GUIMarketplaceDirectory:
     description: Searching for shops/items and approving/removing shops
     aliases: [gmd,guimd,guimarketplacedirectory]

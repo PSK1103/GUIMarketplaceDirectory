@@ -1,6 +1,8 @@
 package me.PSK1103.GUIMarketplaceDirectory.guimd;
 
+import me.PSK1103.GUIMarketplaceDirectory.shoprepos.mysql.MySQLShopRepo;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -30,7 +32,7 @@ public class GUIMarketplaceCommands implements TabExecutor {
 
         if (label.equals("guimarketplacedirectory") || label.equals("gmd") || label.equals("guimd")) {
             if (args.length >= 3) {
-                if (args[0].equals("search")) {
+                if (args[0].equals("search") || args[0].equals("s")) {
                     if(commandSender instanceof ConsoleCommandSender) {
                         commandSender.sendMessage(ChatColor.RED + "You do not have permissions to use this command");
                         return true;
@@ -64,6 +66,15 @@ public class GUIMarketplaceCommands implements TabExecutor {
                             return true;
                     }
                 }
+                else if((args[0].equals("moderate") || args[0].equals("m")) && (args[1].equals("lookup") || args[1].equals("l"))) {
+                    if((args[2].equals("set") || args[2].equals("s"))) {
+                        if (plugin.getCustomConfig().useCoreProtect())
+                            plugin.gui.openShopDirectoryModerator(((Player) commandSender), 5);
+                    }
+                    else if((args[2].equals("all") || args[2].equals("a")))
+                        plugin.getShopRepo().lookupAllShops(((Player) commandSender));
+                    return true;
+                }
             }
             if (args.length == 2) {
                 switch (args[0]) {
@@ -89,6 +100,19 @@ public class GUIMarketplaceCommands implements TabExecutor {
 
                             case "recover":
                                 plugin.gui.openShopDirectoryModerator((Player) commandSender, 3);
+                                return true;
+
+                            case "lookup":
+                                if(plugin.getCustomConfig().useCoreProtect())
+                                    plugin.gui.openShopDirectoryModerator((Player) commandSender, 4);
+                                return true;
+
+                            case "migrate":
+                            case "m":
+                                if(plugin.getShopRepo() instanceof MySQLShopRepo) {
+                                    ((MySQLShopRepo) plugin.getShopRepo()).migrateJSONShops();
+                                }
+                                else commandSender.sendMessage(Component.text(ChatColor.RED + "Currenty using JSON shop repo, cannot migrate"));
                                 return true;
                         }
                         break;
@@ -162,6 +186,7 @@ public class GUIMarketplaceCommands implements TabExecutor {
                 } else {
                     if ("moderate".startsWith(args[0]) && commandSender.hasPermission("GUIMD.moderate")) {
                         if (args[0].equals("moderate")) {
+                            hints.add("migrate");
                             hints.add("pending");
                             hints.add("recover");
                             hints.add("review");
@@ -186,10 +211,22 @@ public class GUIMarketplaceCommands implements TabExecutor {
             if (args.length == 2) {
                 if (args[0].equals("moderate") && commandSender.hasPermission("GUIMD.moderate")) {
                     if (args[1].length() == 0) {
+                        hints.add("lookup");
+                        hints.add("migrate");
                         hints.add("pending");
                         hints.add("recover");
                         hints.add("review");
                     } else {
+                        if ("lookup".startsWith(args[1])) {
+                            if (!args[1].equals("lookup")) {
+                                hints.add("lookup");
+                            }
+                        }
+                        if ("migrate".startsWith(args[1])) {
+                            if (!args[1].equals("migrate")) {
+                                hints.add("migrate");
+                            }
+                        }
                         if ("pending".startsWith(args[1])) {
                             if (!args[1].equals("pending")) {
                                 hints.add("pending");
@@ -241,6 +278,27 @@ public class GUIMarketplaceCommands implements TabExecutor {
                     hints.add("reload");
                 }
                 hints.add("search");
+            }
+
+            if(args.length == 3) {
+                if(args[0].equals("moderate") && args[1].equals("lookup")) {
+                    if(args[2].length() == 0) {
+                        hints.add("all");
+                        hints.add("set");
+                    }
+                    else {
+                        if ("all".startsWith(args[2])) {
+                            if (!args[2].equals("all")) {
+                                hints.add("all");
+                            }
+                        }
+                        if ("set".startsWith(args[2])) {
+                            if (!args[2].equals("set")) {
+                                hints.add("set");
+                            }
+                        }
+                    }
+                }
             }
 
             return hints;

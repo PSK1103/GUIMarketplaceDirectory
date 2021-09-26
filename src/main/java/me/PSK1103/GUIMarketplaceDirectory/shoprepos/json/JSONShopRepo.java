@@ -1,4 +1,4 @@
-package me.PSK1103.GUIMarketplaceDirectory.utils;
+package me.PSK1103.GUIMarketplaceDirectory.shoprepos.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,7 +8,11 @@ import com.google.gson.reflect.TypeToken;
 import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
+import me.PSK1103.GUIMarketplaceDirectory.database.SQLDatabase;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.shoprepos.ShopRepo;
+import me.PSK1103.GUIMarketplaceDirectory.utils.CoreProtectLookup;
+import me.PSK1103.GUIMarketplaceDirectory.utils.Metrics;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.*;
@@ -27,10 +31,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 class ItemList {
@@ -95,7 +102,7 @@ class ItemList {
 
     public static ItemStack getCustomItem(ItemStack item, String customType, Map<String, Object> extraInfo) {
         switch (customType) {
-            case "head":
+            case "head" -> {
                 NBTItem head = new NBTItem(item);
                 NBTCompound skull = head.addCompound("SkullOwner");
                 skull.setString("Name", extraInfo.get("name").toString());
@@ -104,16 +111,15 @@ class ItemList {
                 texture.setString("Signature", extraInfo.get("signature").toString());
                 texture.setString("Value", extraInfo.get("value").toString());
                 item = head.getItem();
-                break;
-            case "potion":
-            case "tippedArrow":
+            }
+            case "potion", "tippedArrow" -> {
                 PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
                 Object integer1 = extraInfo.get("effect");
                 PotionData base = new PotionData(PotionType.values()[integer1 instanceof String ? Integer.parseInt(integer1.toString()) : integer1 instanceof Integer ? Integer.parseInt(integer1.toString()) : Double.valueOf(integer1.toString()).intValue()], (Boolean) extraInfo.get("extended"), (Boolean) extraInfo.get("upgraded"));
                 potionMeta.setBasePotionData(base);
                 item.setItemMeta(potionMeta);
-                break;
-            case "rocket":
+            }
+            case "rocket" -> {
                 NBTItem rocket = new NBTItem(item);
                 NBTCompound fl = rocket.addCompound("Fireworks");
                 double flno = (Double) extraInfo.get("flight");
@@ -141,8 +147,8 @@ class ItemList {
                     fireworkMeta.addEffects(fireworkEffects);
                     item.setItemMeta(fireworkMeta);
                 }
-                break;
-            case "banner":
+            }
+            case "banner" -> {
                 BannerMeta bannerMeta = (BannerMeta) item.getItemMeta();
                 List<Object> patterns = (List<Object>) extraInfo.get("patterns");
                 List<Pattern> bannerPatterns = new ArrayList<>();
@@ -153,8 +159,8 @@ class ItemList {
                 });
                 bannerMeta.setPatterns(bannerPatterns);
                 item.setItemMeta(bannerMeta);
-                break;
-            case "shulker":
+            }
+            case "shulker" -> {
                 List<Map<String, Object>> contents = (List<Map<String, Object>>) extraInfo.get("contents");
                 List<ItemStack> items = new ArrayList<>();
                 contents.forEach(content -> {
@@ -170,20 +176,19 @@ class ItemList {
                     items.add(itemStack);
 
                 });
-
                 BlockStateMeta blockStateMeta = (BlockStateMeta) item.getItemMeta();
                 ShulkerBox shulkerBox = (ShulkerBox) blockStateMeta.getBlockState();
                 shulkerBox.getInventory().setContents(items.toArray(new ItemStack[0]));
                 shulkerBox.update(true, false);
                 blockStateMeta.setBlockState(shulkerBox);
                 item.setItemMeta(blockStateMeta);
-
-                break;
-            case "enchantedBook":
-                Map<String,Object> enchants = (Map<String, Object>) extraInfo.get("storedEnchants");
+            }
+            case "enchantedBook" -> {
+                Map<String, Object> enchants = (Map<String, Object>) extraInfo.get("storedEnchants");
                 EnchantmentStorageMeta esm = (EnchantmentStorageMeta) item.getItemMeta();
-                enchants.forEach((enchant, integer) -> esm.addStoredEnchant(new EnchantmentWrapper(enchant), integer instanceof String ? Integer.parseInt(integer.toString()) : integer instanceof Integer ? Integer.parseInt(integer.toString()) : Double.valueOf(integer.toString()).intValue(),false));
+                enchants.forEach((enchant, integer) -> esm.addStoredEnchant(new EnchantmentWrapper(enchant), integer instanceof String ? Integer.parseInt(integer.toString()) : integer instanceof Integer ? Integer.parseInt(integer.toString()) : Double.valueOf(integer.toString()).intValue(), false));
                 item.setItemMeta(esm);
+            }
         }
         if (extraInfo.containsKey("enchants")) {
             Map<String,Object> codedEnchants = (Map<String, Object>) extraInfo.get("enchants");
@@ -355,7 +360,7 @@ class Shop {
     }
 }
 
-public class ShopRepo {
+public class JSONShopRepo implements ShopRepo {
     private final Map<String, Shop> shops;
     private final Map<String, Shop> pendingShops;
     private final Map<String, Shop> waitingShops;
@@ -375,7 +380,7 @@ public class ShopRepo {
 
     private final Logger logger;
 
-    public ShopRepo(GUIMarketplaceDirectory plugin) {
+    public JSONShopRepo(GUIMarketplaceDirectory plugin) {
         this.shops = new HashMap<>();
         this.pendingShops = new HashMap<>();
         shopsUnderAdd = new HashMap<>();
@@ -385,18 +390,20 @@ public class ShopRepo {
         waitingShops = new HashMap<>();
         itemToAdd = new HashMap<>();
         this.plugin = plugin;
-        this.logger = plugin.getSLF4JLogger();
+        this.logger = plugin.getLogger();
         if (initShops()) {
             logger.info("Shops loaded");
             if (plugin.getCustomConfig().bstatsEnabled())
                 addShopCountMetric();
         } else {
-            logger.error("Error while loading shops, disabling GUIMD");
+            logger.severe("Error while loading shops, disabling GUIMD");
             Bukkit.getPluginManager().disablePlugin(plugin);
         }
     }
 
-    public void addShopAsOwner(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    @Override
+    public String addShopAsOwner(String name, String desc, String owner, String uuid, String loc, String displayItem) {
+        String key = "" + System.currentTimeMillis() + uuid;
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
         if(material != null && !materialsWithoutTextures.contains(material)) {
@@ -409,9 +416,12 @@ public class ShopRepo {
             shops.put(key, shop);
 
         saveShops();
+        return key;
     }
 
-    public void addShop(String name, String desc, String owner, String uuid, String key, String loc, String displayItem) {
+    @Override
+    public String addShop(String name, String desc, String owner, String uuid, String loc, String displayItem) {
+        String key = "" + System.currentTimeMillis() + uuid;
         Shop shop = new Shop(name, desc, owner, uuid, key, loc);
         Material material = Material.matchMaterial(displayItem);
         if(material != null && !materialsWithoutTextures.contains(material)) {
@@ -421,16 +431,20 @@ public class ShopRepo {
         waitingShops.put(uuid, shop);
         shopsUnderEdit.put(key, 2);
         shopsUnderAdd.put(uuid, key);
+        return key;
     }
 
+    @Override
     public String getOwner(String key) {
         return shops.get(key).getOwner();
     }
 
+    @Override
     public boolean getIsInitOwner(String uuid) {
         return waitingShops.containsKey(uuid);
     }
 
+    @Override
     public void stopInitOwner(String uuid) {
         waitingShops.remove(uuid);
         if (shopsUnderAdd.containsKey(uuid)) {
@@ -439,6 +453,7 @@ public class ShopRepo {
         }
     }
 
+    @Override
     public int startAddingOwner(String uuid, String key) {
         if (shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
             return 0;
@@ -449,6 +464,7 @@ public class ShopRepo {
         return 1;
     }
 
+    @Override
     public int startSettingDisplayItem(String uuid, String key) {
         if (shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
             return 0;
@@ -459,6 +475,7 @@ public class ShopRepo {
         return 1;
     }
 
+    @Override
     public int startRemovingShop(String uuid, String key) {
         if (shopsUnderAdd.containsKey(uuid) && !shopsUnderEdit.containsKey(key))
             return 0;
@@ -468,19 +485,22 @@ public class ShopRepo {
         return 1;
     }
 
+    @Override
     public boolean getIsEditingShop(String uuid, String key) {
         return shopsUnderAdd.containsKey(uuid) || shopsUnderAdd.containsValue(key);
     }
 
+    @Override
     public boolean getIsAddingOwner(String key) {
         return shopsUnderAdd.containsValue(key) && shopsUnderEdit.containsKey(key);
     }
 
-
+    @Override
     public boolean getIsUserAddingOwner(String uuid) {
         return shopsUnderAdd.containsKey(uuid) && shopsUnderEdit.containsKey(shopsUnderAdd.get(uuid)) || waitingShops.containsKey(uuid);
     }
 
+    @Override
     public void addOwner(String uuid, OfflinePlayer player) {
         if (waitingShops.containsKey(uuid)) {
             Shop shop = waitingShops.get(uuid);
@@ -510,6 +530,7 @@ public class ShopRepo {
         }
     }
 
+    @Override
     public void setDisplayItem(String uuid, String materialName) {
         if (shopsUnderAdd.containsKey(uuid)) {
             if (pendingShops.containsKey(shopsUnderAdd.get(uuid))) {
@@ -523,6 +544,7 @@ public class ShopRepo {
         }
     }
 
+    @Override
     public void saveShops() {
         if(shops == null)
             return;
@@ -666,23 +688,23 @@ public class ShopRepo {
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
-                                    logger.error("Malformed shops.json, cannot add item");
+                                    logger.severe("Malformed shops.json, cannot add item");
                                 if (e instanceof NullPointerException)
-                                    logger.warn("Key value(s) missing, item won't be created");
+                                    logger.warning("Key value(s) missing, item won't be created");
                                 e.printStackTrace();
                             }
                         }
                         shops.put(shopJSON.get("key").toString(), shop);
                     } catch (ClassCastException | NumberFormatException | NullPointerException e) {
                         if (e instanceof ClassCastException || e instanceof NumberFormatException)
-                            logger.error("Malformed shops.json, cannot add shop");
+                            logger.severe("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
-                            logger.warn("Key value(s) missing, shop won't be created");
+                            logger.warning("Key value(s) missing, shop won't be created");
                         e.printStackTrace();
                     }
                 }
             } else
-                logger.warn("No shops in directory");
+                logger.warning("No shops in directory");
 
             if (pShopJSONs.size() > 0) {
                 for (Object json : pShopJSONs) {
@@ -714,18 +736,18 @@ public class ShopRepo {
                                 shop.addToInv(item);
                             } catch (ClassCastException | NullPointerException e) {
                                 if (e instanceof ClassCastException)
-                                    logger.error("Malformed shops.json, cannot add item");
+                                    logger.severe("Malformed shops.json, cannot add item");
                                 if (e instanceof NullPointerException)
-                                    logger.warn("Key value(s) missing, item won't be created");
+                                    logger.warning("Key value(s) missing, item won't be created");
                                 e.printStackTrace();
                             }
                         }
                         pendingShops.put(shopJSON.get("key").toString(), shop);
                     } catch (ClassCastException | NumberFormatException | NullPointerException e) {
                         if (e instanceof ClassCastException || e instanceof NumberFormatException)
-                            logger.warn("Malformed shops.json, cannot add shop");
+                            logger.warning("Malformed shops.json, cannot add shop");
                         if (e instanceof NullPointerException)
-                            logger.warn("Key value(s) missing, shop won't be created");
+                            logger.warning("Key value(s) missing, shop won't be created");
                         e.printStackTrace();
                     }
                 }
@@ -743,10 +765,12 @@ public class ShopRepo {
         }
     }
 
+    @Override
     public boolean isShopUnderEditOrAdd(String key) {
         return itemToAdd.containsKey(key) || shopsUnderEdit.containsKey(key);
     }
 
+    @Override
     public int initItemAddition(String uuid, String key, String name, ItemStack itemStack) {
         int res = 1;
         if (!shops.containsKey(key) && !pendingShops.containsKey(key))
@@ -944,10 +968,12 @@ public class ShopRepo {
         return res;
     }
 
+    @Override
     public void initShopOwnerAddition(String uuid) {
-        shopsUnderEdit.put(shopsUnderAdd.get(uuid), 1);
+        shopsUnderEdit.put(shopsUnderAdd.get(uuid), 5);
     }
 
+    @Override
     public int getEditType(String uuid) {
         if (!shopsUnderAdd.containsKey(uuid))
             return -1;
@@ -955,10 +981,12 @@ public class ShopRepo {
         return shopsUnderEdit.getOrDefault(shopsUnderAdd.get(uuid), 0);
     }
 
+    @Override
     public void setQty(String qty, String uuid) {
         itemToAdd.get(shopsUnderAdd.get(uuid)).setQty(qty);
     }
 
+    @Override
     public void setPrice(int price, String uuid) {
         itemToAdd.get(shopsUnderAdd.get(uuid)).setPrice(price);
         if (shops.containsKey(shopsUnderAdd.get(uuid)))
@@ -972,19 +1000,23 @@ public class ShopRepo {
         saveShops();
     }
 
+    @Override
     public boolean isAddingItem(String uuid) {
         return shopsUnderAdd.containsKey(uuid) && !waitingShops.containsKey(uuid) && !shopsUnderEdit.containsKey(shopsUnderAdd.get(uuid));
     }
 
+    @Override
     public void stopEditing(String uuid) {
         itemToAdd.remove(shopsUnderAdd.get(uuid));
         shopsUnderAdd.remove(uuid);
     }
 
+    @Override
     public boolean isShopOwner(String uuid, String key) {
         return (shops.containsKey(key) && (shops.get(key).getUuid().equals(uuid) || shops.get(key).getOwners().containsKey(uuid))) || (pendingShops.containsKey(key) && (pendingShops.get(key).getUuid().equals(uuid) || pendingShops.get(key).getOwners().containsKey(uuid)));
     }
 
+    @Override
     public void approveShop(String key) {
         if (pendingShops.containsKey(key)) {
             shops.put(key, pendingShops.get(key));
@@ -993,46 +1025,56 @@ public class ShopRepo {
         }
     }
 
+    @Override
     public void rejectShop(String uuid) {
         pendingShops.remove(shopsUnderReject.get(uuid));
         shopsUnderReject.remove(uuid);
         saveShops();
     }
 
+    @Override
     public void cancelRejectShop(String uuid) {
         shopsUnderReject.remove(uuid);
     }
 
+    @Override
     public boolean isShopRejecting(String key) {
         return shopsUnderReject.containsValue(key);
     }
 
+    @Override
     public boolean isUserRejectingShop(String uuid) {
         return shopsUnderReject.containsKey(uuid);
     }
 
+    @Override
     public void addShopToRejectQueue(String uuid, String key) {
         shopsUnderReject.put(uuid, key);
     }
 
+    @Override
     public void removeShop(String uuid) {
         shops.remove(shopsUnderRemove.get(uuid));
         shopsUnderRemove.remove(uuid);
         saveShops();
     }
 
+    @Override
     public void cancelRemoveShop(String uuid) {
         shopsUnderRemove.remove(uuid);
     }
 
+    @Override
     public boolean isShopRemoving(String key) {
         return shopsUnderRemove.containsValue(key);
     }
 
+    @Override
     public boolean isUserRemovingShop(String uuid) {
         return shopsUnderRemove.containsKey(uuid);
     }
 
+    @Override
     public void addShopToRemoveQueue(String uuid, String key) {
         shopsUnderRemove.put(uuid, key);
     }
@@ -1067,17 +1109,19 @@ public class ShopRepo {
         return detailsList;
     }
 
-    public List<ItemStack> getShopInv(String key) {
+    public List<Object> getShopInv(String key) {
         Shop shop = null;
         if (shops.containsKey(key))
             shop = shops.get(key);
         else if (pendingShops.containsKey(key))
             shop = pendingShops.get(key);
 
+        List<Object> data = new ArrayList<>();
         List<ItemStack> inv = new ArrayList<>();
+        List<Integer> itemIds = new ArrayList<>();
 
         if (shop == null) {
-            return inv;
+            return data;
         }
 
         shop.getInv().forEach(itemList -> {
@@ -1088,9 +1132,12 @@ public class ShopRepo {
             meta.lore(lore);
             item.setItemMeta(meta);
             inv.add(item);
+            itemIds.add(-1);
 
         });
-        return inv;
+        data.add(inv);
+        data.add(itemIds);
+        return data;
     }
 
     public void findBetterAlternative(Player player, String key, int pos) {
@@ -1122,14 +1169,18 @@ public class ShopRepo {
                                 return;
                         }
                         double val = 0;
-                        String[] parts = itemList.qty.split(":");
-                        if (Integer.parseInt(parts[0]) > 0)
-                            val = Double.parseDouble(parts[0]) * 1728;
-                        else if (Integer.parseInt(parts[1]) > 0)
-                            val = Double.parseDouble(parts[1]) * 64;
-                        else if (Integer.parseInt(parts[2]) > 0)
-                            val = Double.parseDouble(parts[2]);
-                        val /= itemList.price;
+                        if (itemList.price <= 0)
+                            val = Integer.MAX_VALUE;
+                        else {
+                            String[] parts = itemList.qty.split(":");
+                            if (Integer.parseInt(parts[0]) > 0)
+                                val = Double.parseDouble(parts[0]) * 1728;
+                            else if (Integer.parseInt(parts[1]) > 0)
+                                val = Double.parseDouble(parts[1]) * 64;
+                            else if (Integer.parseInt(parts[2]) > 0)
+                                val = Double.parseDouble(parts[2]);
+                            val /= itemList.price;
+                        }
 
                         if (val > finalValue) {
                             player.sendMessage(ChatColor.GOLD + shop.getName() + ChatColor.WHITE + " has a better deal: " + ((TextComponent) itemList.getItem().lore().get(0)).content());
@@ -1259,6 +1310,65 @@ public class ShopRepo {
         plugin.getMetrics().addCustomChart(new Metrics.SingleLineChart("shops", shops::size));
     }
 
+    @Override
+    public void lookupShop(Player player, String key) {
+        String timeString = plugin.getCustomConfig().getLookupTime();
+        java.util.regex.Pattern timePattern = java.util.regex.Pattern.compile("(\\d+[m|h|s|d|M])");
+        Matcher timeMatcher = timePattern.matcher(timeString);
+        int time = 0;
+        try {
+            while(timeMatcher.find()) {
+                String type = timeMatcher.group(2);
+                int value = Integer.parseInt(timeMatcher.group(1));
+                time += value *
+                        switch (type) {
+                            case "s" -> 1;
+                            case "m" -> 60;
+                            case "h" -> 3600;
+                            case "d" -> 86400;
+                            case "M" -> 3592000;
+                            default -> throw new IllegalStateException("Unexpected value: " + type);
+                        };
+            }
+        }
+        catch (Exception ignored) {
+            time = 604800;
+        }
+        Shop shop = shops.get(key);
+        String loc = shop.getLoc();
+        Matcher locMatcher = java.util.regex.Pattern.compile("(-?\\d+),(-?\\d+)").matcher(loc);
+        int x,y,z;
+        if(locMatcher.find()) {
+            x = Integer.parseInt(locMatcher.group(1));
+            z = Integer.parseInt(locMatcher.group(2));
+        }
+        else {
+            x = player.getLocation().getBlockX();
+            z = player.getLocation().getBlockZ();
+        }
+        y = player.getLocation().getBlockY();
+        Location location = new Location(player.getWorld(), x, y, z);
+        int radius = plugin.getCustomConfig().getDefaultLookupRadius();
+//        int interactions = plugin.getCustomConfig().getInteractions();
+        List<String> owners = new ArrayList<>(shop.getOwners().values());
+        new CoreProtectLookup(plugin).lookup(player, owners, location, time, radius);
+    }
+
+    @Override
+    public void lookupAllShops(Player player) {
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        shops.forEach((k, shop) -> {
+            class LookupThread implements Runnable{
+                @Override
+                public void run() {
+                    player.sendMessage(ChatColor.GREEN + "For " + ChatColor.GOLD + shop.getName());
+                    lookupShop(player, shop.getKey());
+                }
+            }
+            executorService.submit(new LookupThread());
+        });
+        executorService.shutdown();
+    }
 }
 
 

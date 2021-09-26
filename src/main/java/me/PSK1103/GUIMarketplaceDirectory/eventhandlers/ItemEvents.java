@@ -149,7 +149,7 @@ public class ItemEvents implements Listener {
 
                 int currPage = 1;
 
-                if(itemCheckEvent.getRawSlot() >= (itemCheckEvent.getInventory().getSize() - 9)) {
+                if(itemCheckEvent.getRawSlot() >= (itemCheckEvent.getInventory().getSize() - 9) && itemCheckEvent.getInventory().getSize() == 54) {
                     if(holder.isPaged()) {
                         if (itemCheckEvent.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
                             currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
@@ -173,7 +173,22 @@ public class ItemEvents implements Listener {
                 }
 
                 if (itemCheckEvent.isRightClick() && itemCheckEvent.getCurrentItem() != null && itemCheckEvent.getCurrentItem().getType() != Material.AIR && itemCheckEvent.getCurrentItem().getType() != Material.BARRIER && itemCheckEvent.getRawSlot()<45) {
-                    plugin.getShopRepo().findBetterAlternative(player, holder.getKey(), itemCheckEvent.getRawSlot());
+                    if (itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize() - 1) {
+                        player.closeInventory();
+                        if (type == 0) {
+                            plugin.gui.openShopDirectory(player);
+                        } else
+                            plugin.gui.openShopDirectoryModerator(player, type);
+                    }
+                    currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    plugin.getShopRepo().findBetterAlternative(player, holder.getKey(), holder.getItemId((currPage-1)*45 + itemCheckEvent.getRawSlot()));
+                }
+                if (itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize() - 1) {
+                    player.closeInventory();
+                    if (type == 0) {
+                        plugin.gui.openShopDirectory(player);
+                    } else
+                        plugin.gui.openShopDirectoryModerator(player, type);
                 }
             }
             else {
