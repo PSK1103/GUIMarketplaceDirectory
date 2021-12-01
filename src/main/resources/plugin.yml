@@ -6,6 +6,7 @@ version: 1.2.0
 description: gui marketplace directory
 softdepend: [CoreProtect]
 loadbefore: [CoreProtect]
+load: STARTUP
 
 commands:
   GUIMarketplaceDirectory:

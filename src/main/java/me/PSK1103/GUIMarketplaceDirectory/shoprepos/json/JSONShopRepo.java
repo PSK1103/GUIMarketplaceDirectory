@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken;
 import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import de.tr7zw.nbtapi.NBTListCompound;
-import me.PSK1103.GUIMarketplaceDirectory.database.SQLDatabase;
 import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.shoprepos.ShopRepo;
 import me.PSK1103.GUIMarketplaceDirectory.utils.CoreProtectLookup;

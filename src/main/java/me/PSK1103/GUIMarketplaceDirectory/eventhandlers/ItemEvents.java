@@ -180,7 +180,10 @@ public class ItemEvents implements Listener {
                         } else
                             plugin.gui.openShopDirectoryModerator(player, type);
                     }
-                    currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    try {
+                        currPage = Integer.parseInt(itemCheckEvent.getInventory().getItem(45).getItemMeta().getDisplayName().substring(5));
+                    }
+                    catch (Exception ignored) {}
                     plugin.getShopRepo().findBetterAlternative(player, holder.getKey(), holder.getItemId((currPage-1)*45 + itemCheckEvent.getRawSlot()));
                 }
                 if (itemCheckEvent.getRawSlot() == itemCheckEvent.getInventory().getSize() - 1) {
