@@ -6,7 +6,7 @@
 
     <groupId>me.PSK1103</groupId>
     <artifactId>GUIMarketplaceDirectory</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 
     <repositories>
         <repository>
