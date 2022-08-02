@@ -1,3 +1,6 @@
+#config version check
+version: 2
+
 #custom colors for shop details [description,location,owner name]
 # should be in the format §[0-9a-fk-or]
 default-shop-name-color: §6§l
@@ -33,7 +36,12 @@ filter-alternatives-list: false
 use-db: false
 
 #choose which db to use,currently only supports 'mysql' and 'mariadb', only relevant when use-db is true
-db: mariadb
+db:
+  type: mariadb
+  host: localhost
+  port: 3306
+  username: root
+  password: root
 
 #fill your mysql db details
 mysql-host: 127.0.0.1

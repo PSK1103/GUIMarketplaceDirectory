@@ -3,19 +3,18 @@ package me.PSK1103.GUIMarketplaceDirectory.eventhandlers;
 import io.netty.channel.*;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.PSK1103.GUIMarketplaceDirectory.database.SQLDatabase;
-import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
 import me.PSK1103.GUIMarketplaceDirectory.shoprepos.mysql.MySQLShopRepo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenBook;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -32,7 +31,7 @@ public class ShopEvents implements Listener {
     class PacketHandler {
 
         public void removePLayer(Player player) {
-            Channel channel = ((CraftPlayer) player).getHandle().b.a.k;
+            Channel channel = ((CraftPlayer) player).getHandle().b.b.m;
             channel.eventLoop().submit(() -> {
                 channel.pipeline().remove(player.getName());
             });
@@ -78,7 +77,7 @@ public class ShopEvents implements Listener {
                 }
             };
 
-            ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.a.k.pipeline();
+            ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.b.m.pipeline();
             if(pipeline.get(player.getName()) == null)
                 pipeline.addBefore("packet_handler",player.getName(),channelDuplexHandler);
         }

@@ -1,8 +1,9 @@
-package me.PSK1103.GUIMarketplaceDirectory.guimd;
+package me.PSK1103.GUIMarketplaceDirectory;
 
 import me.PSK1103.GUIMarketplaceDirectory.database.SQLDatabase;
 import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ItemEvents;
 import me.PSK1103.GUIMarketplaceDirectory.eventhandlers.ShopEvents;
+import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceCommands;
 import me.PSK1103.GUIMarketplaceDirectory.shoprepos.ShopRepo;
 import me.PSK1103.GUIMarketplaceDirectory.shoprepos.mysql.MySQLShopRepo;
 import me.PSK1103.GUIMarketplaceDirectory.utils.Config;

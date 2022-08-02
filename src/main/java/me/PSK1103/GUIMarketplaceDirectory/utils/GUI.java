@@ -1,7 +1,7 @@
 package me.PSK1103.GUIMarketplaceDirectory.utils;
 
 
-import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.MarketplaceBookHolder;
 import me.PSK1103.GUIMarketplaceDirectory.invholders.ShopInvHolder;
 import net.kyori.adventure.text.Component;

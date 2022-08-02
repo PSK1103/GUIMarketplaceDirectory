@@ -1,5 +1,6 @@
 package me.PSK1103.GUIMarketplaceDirectory.guimd;
 
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import me.PSK1103.GUIMarketplaceDirectory.shoprepos.mysql.MySQLShopRepo;
 import me.PSK1103.GUIMarketplaceDirectory.utils.GUI;
 import net.kyori.adventure.text.Component;

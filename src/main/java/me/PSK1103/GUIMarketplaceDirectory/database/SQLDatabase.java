@@ -1,6 +1,6 @@
 package me.PSK1103.GUIMarketplaceDirectory.database;
 
-import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import org.json.simple.JSONObject;
 
 import java.sql.*;

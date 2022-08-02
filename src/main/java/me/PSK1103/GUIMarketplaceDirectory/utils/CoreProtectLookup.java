@@ -1,11 +1,9 @@
 package me.PSK1103.GUIMarketplaceDirectory.utils;
 
-import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import net.coreprotect.CoreProtect;
 import net.coreprotect.CoreProtectAPI;
 import net.coreprotect.database.Database;
-import net.coreprotect.database.Lookup;
-import net.coreprotect.database.Rollback;
 import net.coreprotect.language.Phrase;
 import net.coreprotect.utility.Chat;
 import net.coreprotect.utility.Color;
@@ -104,6 +102,7 @@ public class CoreProtectLookup {
         // You need to either specify time/radius or time/user
         List<String[]> result = new ArrayList<>();
         List<String> uuids = new ArrayList<>();
+        List<String> users = new ArrayList<>();
 
         if (restrictUsers == null) {
             restrictUsers = new ArrayList<>();
@@ -187,13 +186,13 @@ public class CoreProtectLookup {
                     argRadius = new Integer[] { radius, xMin, xMax, -1, -1, zMin, zMax, 0 };
                 }
 
-                if (lookup == 1) {
+                /*if (lookup == 1) {
                     if (location != null) {
                         restrictWorld = true;
                     }
 
                     if (useLimit) {
-                        result = Lookup.performPartialLookup(statement, null, uuids, restrictUsers, restrictBlocks, excludeBlocks, excludeUsers, actionList, location, argRadius, timePeriod, offset, rowCount, restrictWorld, true);
+                        result = Lookup.performPartialLookup(statement, null, uuids, users, restrictBlocks, null, excludeUsers, actionList, location, argRadius, timePeriod, offset, rowCount, restrictWorld, true);
                     }
                     else {
                         result = Lookup.performLookup(statement, null, uuids, restrictUsers, restrictBlocks, excludeBlocks, excludeUsers, actionList, location, argRadius, timePeriod, restrictWorld, true);
@@ -204,7 +203,7 @@ public class CoreProtectLookup {
                         boolean verbose = false;
                         result = Rollback.performRollbackRestore(statement, null, uuids, restrictUsers, null, restrictBlocks, excludeBlocks, excludeUsers, actionList, location, argRadius, timePeriod, restrictWorld, false, verbose, action, 0);
                     }
-                }
+                }*/
 
                 statement.close();
                 connection.close();

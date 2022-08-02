@@ -1,6 +1,7 @@
 package me.PSK1103.GUIMarketplaceDirectory.utils;
 
-import me.PSK1103.GUIMarketplaceDirectory.guimd.GUIMarketplaceDirectory;
+import me.PSK1103.GUIMarketplaceDirectory.database.DBConfig;
+import me.PSK1103.GUIMarketplaceDirectory.GUIMarketplaceDirectory;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -33,11 +34,12 @@ public class Config {
 
     private String db;
 
-    private String MYSQL_HOST;
-    private String MYSQL_PORT;
-    private String MYSQL_DATABASE;
-    private String MYSQL_USERNAME;
-    private String MYSQL_PASSWORD;
+    private String DB_TYPE;
+    private String DB_HOST;
+    private String DB_PORT;
+    private String DB_DATABASE;
+    private String DB_USERNAME;
+    private String DB_PASSWORD;
     private String DB_PREFIX;
 
     private boolean useCoreProtect;
@@ -87,11 +89,11 @@ public class Config {
             use_db = configFile.getBoolean("use-db", defaultConfig.getBoolean("use-db"));
             db = configFile.getString("db", defaultConfig.getString("db"));
 
-            MYSQL_HOST = configFile.getString("mysql-host", defaultConfig.getString("mysql-host"));
-            MYSQL_PORT = configFile.getString("mysql-port", defaultConfig.getString("mysql-port"));
-            MYSQL_DATABASE = configFile.getString("mysql-database", defaultConfig.getString("mysql-database"));
-            MYSQL_USERNAME = configFile.getString("mysql-username", defaultConfig.getString("mysql-username"));
-            MYSQL_PASSWORD = configFile.getString("mysql-password", defaultConfig.getString("mysql-password"));
+            DB_HOST = configFile.getString("mysql-host", defaultConfig.getString("mysql-host"));
+            DB_PORT = configFile.getString("mysql-port", defaultConfig.getString("mysql-port"));
+            DB_DATABASE = configFile.getString("mysql-database", defaultConfig.getString("mysql-database"));
+            DB_USERNAME = configFile.getString("mysql-username", defaultConfig.getString("mysql-username"));
+            DB_PASSWORD = configFile.getString("mysql-password", defaultConfig.getString("mysql-password"));
             DB_PREFIX = configFile.getString("table-prefix", defaultConfig.getString("table-prefix"));
 
             useCoreProtect = configFile.getBoolean("use-coreprotect",defaultConfig.getBoolean("use-coreprotect", false));
@@ -136,11 +138,11 @@ public class Config {
             use_db = defaultConfig.getBoolean("use-db");
             db = defaultConfig.getString("db");
 
-            MYSQL_HOST = defaultConfig.getString("mysql-host");
-            MYSQL_PORT = defaultConfig.getString("mysql-port");
-            MYSQL_DATABASE = defaultConfig.getString("mysql-database");
-            MYSQL_USERNAME = defaultConfig.getString("mysql-username");
-            MYSQL_PASSWORD = defaultConfig.getString("mysql-password");
+            DB_HOST = defaultConfig.getString("mysql-host");
+            DB_PORT = defaultConfig.getString("mysql-port");
+            DB_DATABASE = defaultConfig.getString("mysql-database");
+            DB_USERNAME = defaultConfig.getString("mysql-username");
+            DB_PASSWORD = defaultConfig.getString("mysql-password");
             DB_PREFIX = defaultConfig.getString("table-prefix", "guimd");
 
             useCoreProtect = defaultConfig.getBoolean("use-coreprotect", false);
@@ -275,13 +277,17 @@ public class Config {
         return use_db;
     }
 
+    public void initDB() {
+        DBConfig.setDB(DB_TYPE, DB_PREFIX, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD);
+    }
+
     public Map<String,String> getMySQLDetails() {
         Map<String,String> details = new HashMap<>();
-        details.put("mysql-host",MYSQL_HOST);
-        details.put("mysql-port",MYSQL_PORT);
-        details.put("mysql-database",MYSQL_DATABASE);
-        details.put("mysql-username",MYSQL_USERNAME);
-        details.put("mysql-password",MYSQL_PASSWORD);
+        details.put("mysql-host",DB_HOST);
+        details.put("mysql-port",DB_PORT);
+        details.put("mysql-database",DB_DATABASE);
+        details.put("mysql-username",DB_USERNAME);
+        details.put("mysql-password",DB_PASSWORD);
         details.put("table-prefix",DB_PREFIX);
         details.put("db", db);
         return  details;
