@@ -55,13 +55,6 @@ public class Item {
         extraInfoRaw = new Gson().toJson(extraInfo);
     }
 
-    public static void main(String[] args) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("v1", 1);
-        map.put("v2", 2.0);
-        System.out.println(new Gson().toJson(map));
-    }
-
     @PostLoad
     private void postLoad() {
         extraInfo = new Gson().fromJson(
